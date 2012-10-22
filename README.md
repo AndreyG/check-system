@@ -1,2 +1,2 @@
-check-system
+Simple check system for algorithmic problems.
 ============
