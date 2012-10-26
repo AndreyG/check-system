@@ -5,6 +5,18 @@
 #include "port.h"
 #include "message_type.h"
 
+int accept_solution()
+{
+    std::cout << "Accepted" << std::endl;
+    return EXIT_SUCCESS;
+}
+
+int refuse_solution()
+{
+    std::cout << "Refused"  << std::endl;
+    return EXIT_SUCCESS;
+}
+
 int main()
 {
     using namespace boost::asio::ip;    
@@ -47,11 +59,16 @@ int main()
             }
             break;
         case TEST_PASSED:
-            std::cout << "passed" << std::endl;
+            std::cout << "passed"               << std::endl;
             break;
+        case WA:
+            std::cout << "wrong answer"         << std::endl;
+            return refuse_solution();
+        case TLE:
+            std::cout << "time limit exceed"    << std::endl;
+            return refuse_solution();
         case ACCEPTED:
-            std::cout << "Accepted" << std::endl;
-            return EXIT_SUCCESS;
+            return accept_solution();
         }
     }
 }
