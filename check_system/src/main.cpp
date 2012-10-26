@@ -4,7 +4,13 @@
 #include "test_collection_impl.h"
 #include "runner.h"
 
+#include "test.h"
 #include "environment.h"
+
+namespace check_system
+{
+    void create_tests(test_collection<input_t, output_t> &, environment &);
+}
 
 int main()
 {
