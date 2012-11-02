@@ -49,6 +49,7 @@
             isset($_POST['groupNumber']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2'])) {
 
             $page = "register";
+
             $pwd = $_POST['password'];
             if ($pwd != $_POST['password2']) {
                 $register_page_error = "Passwords did not match";
@@ -96,6 +97,10 @@
         // if session data is set
         } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] != "" && $_SESSION['md5'] != "") {
             $user_id = $dbm->checkUserMD5($_SESSION['user'], $_SESSION['md5']);
+            if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
+                $_SESSION['user'] = "";
+                $_SESSION['md5'] = "";
+            }
         }
 
 
@@ -104,6 +109,7 @@
             $dbm->updateUserLastIP($user_id, getClientIP());
 
             if ($page == "logout") {
+                $_SESSION['user'] = "";
                 $_SESSION['md5'] = "";
                 $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
             } else {
@@ -112,12 +118,22 @@
                 
                 $profile_page_error = "";
                 $profile_page_info = "";
+                $new_task_page_error = "";
+                $new_task_page_info = "";
+                $new_task_page_old_description_value = "";
                 
                 // if update profile form submitted
                 if (isset($_POST['submitUpdateProfile']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email']) &&
                     isset($_POST['password']) && isset($_POST['password2']) && isset($_POST['curPassword']) && ($user_info->isTeacher || isset($_POST['groupNumber']))) {
 
                     $page = "profile";
+                    
+                    $user_info->firstName = $_POST['firstName'];
+                    $user_info->lastName = $_POST['lastName'];
+                    if (!$user_info->isTeacher)
+                        $user_info->groupNumber = $_POST['groupNumber'];
+                    $user_info->email = $_POST['email'];
+
                     if (md5($_POST['curPassword']) != $user_info->md5) {
                         $profile_page_error = "Current password incorrect";
                     } else if ($_POST['password'] != "" && $_POST['password'] != $_POST['password2']) {
@@ -132,8 +148,8 @@
                         $profile_page_error = "Empty email not allowed";
 
                     } else {
-                        $updRes = $dbm->updateUserInfo($user_id, $_POST['firstName'], $_POST['lastName'], $user_info->isTeacher ? $user_info->groupNumber : $_POST['groupNumber'],
-                                                       $_POST['email'], ($_POST['password'] != "") ? md5($_POST['password']) : $user_info->md5);
+                        $updRes = $dbm->updateUserInfo($user_id, $user_info->firstName, $user_info->lastName, $user_info->groupNumber,
+                                                       $user_info->email, ($_POST['password'] != "") ? md5($_POST['password']) : $user_info->md5);
                         if ($updRes == UpdateUserResult::OK) {
                             $profile_page_info = "Profile updated successfully";
                             $user_info = $dbm->getUserInfo($user_id);
@@ -148,7 +164,23 @@
 
                 // if a teacher is logged in
                 if ($user_info->isTeacher) {
-                    if ($page == "profile") {
+
+                    // if new task form submitted
+                    if (isset($_POST['submitNewTask']) && isset($_POST['name']) && isset($_POST['description'])) {
+                        $page = "new_task";
+                        
+                        if ($_POST['name'] == "") {
+                            $new_task_page_error = "Task name can't be empty";
+                            $new_task_page_old_description_value = $_POST['description'];
+                        } else {
+                            //...
+                        }
+                    }
+
+                    if ($page == "new_task") {
+                        display_tabs("Add new task", Tabs::$TEACHER);
+                        display_new_task_page($selfLink, $new_task_page_error, $new_task_page_info, $new_task_page_old_description_value);
+                    } else if ($page == "profile") {
                         display_tabs("Profile", Tabs::$TEACHER);
                         display_profile_page($selfLink, $profile_page_error, $profile_page_info, $user_info);
                     } else {

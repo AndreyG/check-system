@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `student_tasks` (
 
 CREATE TABLE IF NOT EXISTS `tasks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(256) NOT NULL,
   `description` text NOT NULL,
   `task_file_id` int(11) DEFAULT NULL,
   `env_file_id` int(11) DEFAULT NULL,
