@@ -36,8 +36,8 @@ class DatabaseManager {
         return $this->connError;
     }
     
-    public function checkUserMD5($user, $md5) {
-        $user = htmlentities($user);
+    public function checkUserMD5($login, $md5) {
+        $login = htmlentities($login);
         $md5 = htmlentities($md5);
         
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '" AND md5 = "' . $md5 . '"')) {

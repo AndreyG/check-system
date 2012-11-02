@@ -44,7 +44,7 @@ function display_login_form($form_action, $error) {
     display_tabs(0, Tabs::$ANONYMOUS);
     display_content_start_block();
     if ($error != "") {
-        echo "<p><b id=\"error\">$error</b></p>\n";
+        echo "<p><b><font color=#cc0000>$error</font></b></p>\n";
     }
 ?>
 <form method="post" action="<?php echo $form_action; ?>">
@@ -70,10 +70,10 @@ function display_register_form($form_action, $error, $info) {
     display_tabs(1, Tabs::$ANONYMOUS);
     display_content_start_block();
     if ($error != "") {
-        echo "<p><b id=\"error\">$error</b></p>\n";
+        echo "<p><b><font color=#cc0000>$error</font></b></p>\n";
     }
     if ($info != "") {
-        echo "<p><b id=\"info\">$info</b></p>\n";
+        echo "<p><b><font color=#0000cc>$info</font></b></p>\n";
     }
 ?>
 <form method="post" action="<?php echo $form_action; ?>">

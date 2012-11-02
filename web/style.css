@@ -11,14 +11,6 @@ h1 {
     padding: 0;
 }
 
-#error b {
-    color: #cc0000;
-}
-
-#info b {
-    color: #0000cc;
-}
-
 #wrap{
     margin:30px auto;
     width:980px;
