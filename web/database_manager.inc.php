@@ -7,11 +7,40 @@ class RegistrationResult {
     const ERR_DB_ERROR     = 3;
 }
 
+class UpdateUserResult {
+    const OK               = 0;
+    const ERR_EMAIL_EXISTS = 2;
+    const ERR_DB_ERROR     = 3;
+}
+
 class UserCheckResult {
-    const DB_ERROR          = -1;
-    const USER_INVALID      = 0;
+    const DB_ERROR           = -2;
+    const USER_NOT_LOGGED_IN = -1;
+    const USER_INVALID       = 0;
     //positive result is user id in database
-    const MIN_VALID_USER_ID = 1;
+    const MIN_VALID_USER_ID  = 1;
+}
+
+class UserInfo {
+    public $login;
+    public $firstName;
+    public $lastName;
+    public $groupNumber;
+    public $email;
+    public $md5;
+    public $isTeacher;
+    public $lastIP;
+
+    function __construct($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $lastIP) {
+        $this->login = $login;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->groupNumber = $groupNumber;
+        $this->email = $email;
+        $this->md5 = $md5;
+        $this->isTeacher = $isTeacher;
+        $this->lastIP = $lastIP;
+    }
 }
 
 class DatabaseManager {
@@ -53,7 +82,18 @@ class DatabaseManager {
     }
 
     public function getUserInfo($id) {
-        //...
+        $id = htmlentities($id);
+
+        if ($result = $this->query('SELECT * FROM users WHERE id = ' . $id)) {
+            if ($result->num_rows == 1) {
+                $row = $result->fetch_assoc();
+                return new UserInfo($row['login'], $row['firstName'], $row['lastName'], $row['groupNumber'], $row['email'], $row['md5'], ($row['isTeacher'] == 1) ? 1 : 0, $row['lastIP']);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
     
     public function registerNewUser($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $ip) {
@@ -87,6 +127,38 @@ class DatabaseManager {
         } else {
             return RegistrationResult::ERR_DB_ERROR;
         }
+    }
+    
+    public function updateUserInfo($id, $firstName, $lastName, $groupNumber, $email, $md5) {
+        $id = htmlentities($id);
+        $firstName = htmlentities($firstName);
+        $lastName = htmlentities($lastName);
+        $groupNumber = htmlentities($groupNumber);
+        $email = htmlentities($email);
+        $md5 = htmlentities($md5);
+        
+        //perform check
+        if ($result = $this->query('SELECT id FROM users WHERE LOWER(email) = "' . strtolower($email) . '" AND id != ' . $id)) {
+            if ($result->num_rows > 0)
+                return UpdateUserResult::ERR_EMAIL_EXISTS;
+        } else {
+            return UpdateUserResult::ERR_DB_ERROR;
+        }
+        
+        //update in database
+        if ($this->query('UPDATE users SET firstName = "' . $firstName . '", lastName = "' . $lastName . '", groupNumber = "' . $groupNumber .
+                              '", email = "' . $email . '", md5 = "' . $md5 . '" WHERE id = ' . $id) == true) {
+            return UpdateUserResult::OK;
+        } else {
+            return UpdateUserResult::ERR_DB_ERROR;
+        }
+    }
+    
+    public function updateUserLastIP($id, $ip) {
+        $id = htmlentities($id);
+        $ip = htmlentities($ip);
+        
+        return ($this->query('UPDATE users SET lastIP = "' . $ip . '" WHERE id = ' . $id));
     }
     
     public function close() {

@@ -16,17 +16,17 @@
         return $client_ip;
     }
 
-    require_once('style.inc.php');
     require_once('database_manager.inc.php');
+    require_once('style.inc.php');
     require_once('settings.inc.php');
     
     $selfLink = htmlspecialchars($_SERVER['PHP_SELF']);
     
-    $db = new DatabaseManager();
+    $dbm = new DatabaseManager();
     
-    if (!$db->connect($db_server, $db_user, $db_passwd, $db_name)) {
+    if (!$dbm->connect($db_server, $db_user, $db_passwd, $db_name)) {
         display_tabs(0, Tabs::$FATAL_ERROR);
-        $connError = $db->getConnError();
+        $connError = $dbm->getConnError();
         display_content("<p>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</p>");
     } else {
 
@@ -40,69 +40,148 @@
         
         $user_id = UserCheckResult::USER_INVALID;
         
-        $login_error = "";
-        $register_error = "";
-        $register_info = "";
+        $login_page_error = "";
+        $register_page_error = "";
+        $register_page_info = "";
         
+        // if registration form submitted
         if (isset($_POST['submitRegister']) && isset($_POST['login']) && isset($_POST['firstName']) && isset($_POST['lastName']) &&
             isset($_POST['groupNumber']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2'])) {
 
             $page = "register";
             $pwd = $_POST['password'];
             if ($pwd != $_POST['password2']) {
-                $register_error = "Passwords did not match";
+                $register_page_error = "Passwords did not match";
             } else if ($_POST['login'] == "") {
-                $register_error = "Empty login not allowed";
+                $register_page_error = "Empty login not allowed";
             } else if ($_POST['firstName'] == "") {
-                $register_error = "Empty first name not allowed";
+                $register_page_error = "Empty first name not allowed";
             } else if ($_POST['lastName'] == "") {
-                $register_error = "Empty last name not allowed";
+                $register_page_error = "Empty last name not allowed";
             } else if ($_POST['groupNumber'] == "") {
-                $register_error = "Empty group number not allowed";
+                $register_page_error = "Empty group number not allowed";
             } else if ($_POST['email'] == "") {
-                $register_error = "Empty email not allowed";
+                $register_page_error = "Empty email not allowed";
             } else if ($_POST['password'] == "") {
-                $register_error = "Empty password not allowed";
+                $register_page_error = "Empty password not allowed";
+
             } else {
-                $regRes = $db->registerNewUser($_POST['login'], $_POST['firstName'], $_POST['lastName'], $_POST['groupNumber'],
+                $regRes = $dbm->registerNewUser($_POST['login'], $_POST['firstName'], $_POST['lastName'], $_POST['groupNumber'],
                                                $_POST['email'], md5($_POST['password']), false, getClientIP());
                 if ($regRes == RegistrationResult::OK) {
-                    $register_info = "Registered successfully";
+                    $register_page_info = "Registered successfully";
                 } else if ($regRes == RegistrationResult::ERR_LOGIN_EXISTS) {
-                    $register_error = "Such login already registered";
+                    $register_page_error = "Such login already registered";
                 } else if ($regRes == RegistrationResult::ERR_EMAIL_EXISTS) {
-                    $register_error = "Such email already registered";
+                    $register_page_error = "Such email already registered";
                 } else if ($regRes == RegistrationResult::ERR_DB_ERROR) {
-                    $register_error = "Database query error";
+                    $register_page_error = "Database query error";
                 }
             }
 
+        // if login form submitted
         } else if (isset($_POST['submitLogin']) && isset($_POST['login']) && isset($_POST['password'])) {
             $user = htmlentities($_POST['login']);
             $md5 = md5($_POST['password']);
-            $user_id = $db->checkUserMD5($user, $md5);
+            $user_id = $dbm->checkUserMD5($user, $md5);
             if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
                 $_SESSION['user'] = $user;
                 $_SESSION['md5'] = $md5;
             } else if ($user_id == UserCheckResult::USER_INVALID) {
-                $login_error = "Incorrect login or password";
+                $login_page_error = "Incorrect login or password";
             } else if ($user_id == UserCheckResult::DB_ERROR) {
-                $login_error = "Database query error";
+                $login_page_error = "Database query error";
             }
-        } else if (isset($_SESSION['user']) && isset($_SESSION['md5'])) {
-            $user_id = $db->checkUserMD5($_SESSION['user'], $_SESSION['md5']);
+
+        // if session data is set
+        } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] != "" && $_SESSION['md5'] != "") {
+            $user_id = $dbm->checkUserMD5($_SESSION['user'], $_SESSION['md5']);
         }
-        
+
+
+        // if valid user logged in
         if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
-        } else {
-            if ($page == "register") {
-                display_register_form($selfLink, $register_error, $register_info);
+            $dbm->updateUserLastIP($user_id, getClientIP());
+
+            if ($page == "logout") {
+                $_SESSION['md5'] = "";
+                $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
             } else {
-                display_login_form($selfLink, $login_error);
+
+                $user_info = $dbm->getUserInfo($user_id);
+                
+                $profile_page_error = "";
+                $profile_page_info = "";
+                
+                // if update profile form submitted
+                if (isset($_POST['submitUpdateProfile']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email']) &&
+                    isset($_POST['password']) && isset($_POST['password2']) && isset($_POST['curPassword']) && ($user_info->isTeacher || isset($_POST['groupNumber']))) {
+
+                    $page = "profile";
+                    if (md5($_POST['curPassword']) != $user_info->md5) {
+                        $profile_page_error = "Current password incorrect";
+                    } else if ($_POST['password'] != "" && $_POST['password'] != $_POST['password2']) {
+                        $profile_page_error = "New passwords did not match";
+                    } else if ($_POST['firstName'] == "") {
+                        $profile_page_error = "Empty first name not allowed";
+                    } else if ($_POST['lastName'] == "") {
+                        $profile_page_error = "Empty last name not allowed";
+                    } else if (!$user_info->isTeacher && $_POST['groupNumber'] == "") {
+                        $profile_page_error = "Empty group number not allowed";
+                    } else if ($_POST['email'] == "") {
+                        $profile_page_error = "Empty email not allowed";
+
+                    } else {
+                        $updRes = $dbm->updateUserInfo($user_id, $_POST['firstName'], $_POST['lastName'], $user_info->isTeacher ? $user_info->groupNumber : $_POST['groupNumber'],
+                                                       $_POST['email'], ($_POST['password'] != "") ? md5($_POST['password']) : $user_info->md5);
+                        if ($updRes == UpdateUserResult::OK) {
+                            $profile_page_info = "Profile updated successfully";
+                            $user_info = $dbm->getUserInfo($user_id);
+                            $_SESSION['md5'] = $user_info->md5;
+                        } else if ($updRes == UpdateUserResult::ERR_EMAIL_EXISTS) {
+                            $profile_page_error = "Such email already registered";
+                        } else if ($updRes == UpdateUserResult::ERR_DB_ERROR) {
+                            $profile_page_error = "Database query error";
+                        }
+                    }
+                }
+
+                // if a teacher is logged in
+                if ($user_info->isTeacher) {
+                    if ($page == "profile") {
+                        display_tabs("Profile", Tabs::$TEACHER);
+                        display_profile_page($selfLink, $profile_page_error, $profile_page_info, $user_info);
+                    } else {
+                        display_tabs("...", Tabs::$TEACHER);
+                    }
+
+                // if a student is logged in
+                } else {
+                    if ($page == "submit") {
+                        display_tabs("Submit", Tabs::$STUDENT);
+                    } else if ($page == "profile") {
+                        display_tabs("Profile", Tabs::$STUDENT);
+                        display_profile_page($selfLink, $profile_page_error, $profile_page_info, $user_info);
+                    } else {
+                        display_tabs("Tasks", Tabs::$STUDENT);
+                    }
+                }
+
+            }
+        }
+
+        // if not logged in
+        if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
+            if ($page == "register") {
+                display_tabs("Registration", Tabs::$ANONYMOUS);
+                display_register_page($selfLink, $register_page_error, $register_page_info);
+            } else {
+                display_tabs("Authorization", Tabs::$ANONYMOUS);
+                display_login_page($selfLink, $login_page_error);
             }
         }
         
-        $db->close();
+        $dbm->close();
     }
 ?>
 
