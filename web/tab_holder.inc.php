@@ -1,6 +1,6 @@
 <?php
 
-require_once('abstract_tab.inc.php');
+require_once('tabs/abstract_tab.inc.php');
 require_once('style.inc.php');
 
 class TabHolder {

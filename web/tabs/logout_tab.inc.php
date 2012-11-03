@@ -1,6 +1,6 @@
 <?php
 
-require_once('abstract_tab.inc.php');
+require_once('tabs/abstract_tab.inc.php');
 
 class LogoutTab extends AbstractTab {
     public function getTabInfo() {

@@ -11,12 +11,13 @@
 <div id="wrap">
 
 <?php
-    require_once('fatal_error_tab.inc.php');
-    require_once('authorization_tab.inc.php');
-    require_once('registration_tab.inc.php');
-    require_once('profile_tab.inc.php');
-    require_once('logout_tab.inc.php');
-    require_once('new_task_tab.inc.php');
+    require_once('tabs/fatal_error_tab.inc.php');
+    require_once('tabs/authorization_tab.inc.php');
+    require_once('tabs/registration_tab.inc.php');
+    require_once('tabs/profile_tab.inc.php');
+    require_once('tabs/logout_tab.inc.php');
+    
+    require_once('tabs/teacher/new_task_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
