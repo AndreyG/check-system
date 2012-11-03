@@ -57,63 +57,6 @@ function display_error_or_info_if_any($error, $info) {
     }
 }
 
-function display_profile_page($form_action, $error, $info, $user_info) {
-    display_content_start_block();
-    display_error_or_info_if_any($error, $info);
-?>
-<form method="post" action="<?php echo $form_action; ?>">
-    <table>
-        <tr>
-            <td>Login:</td>
-            <td><?php echo $user_info->login; ?></td>
-        </tr>
-        <tr>
-            <td>Role:</td>
-            <td><?php echo ($user_info->isTeacher ? "Teacher" : "Student"); ?></td>
-        </tr>
-        <tr>
-            <td>First name:</td>
-            <td><input type="text" size="20" name="firstName" value="<?php echo $user_info->firstName; ?>"></td>
-        </tr>
-        <tr>
-            <td>Last name:</td>
-            <td><input type="text" size="20" name="lastName" value="<?php echo $user_info->lastName; ?>"></td>
-        </tr>
-<?php
-    if (!$user_info->isTeacher) {
-?>
-        <tr>
-            <td>Group number:</td>
-            <td><input type="text" size="20" name="groupNumber" value="<?php echo $user_info->groupNumber; ?>"></td>
-        </tr>
-<?php
-    }
-?>
-        <tr>
-            <td>E-mail:</td>
-            <td><input type="text" size="20" name="email" value="<?php echo $user_info->email; ?>"></td>
-        </tr>
-        <tr>
-            <td>New password:</td>
-            <td><input type="password" size="20" name="password"> (leave empty if you don't need to change it)</td>
-        </tr>
-        <tr>
-            <td>Repeat new password:</td>
-            <td><input type="password" size="20" name="password2"></td>
-        </tr>
-        <tr>
-            <td>Current password:</td>
-            <td><input type="password" size="20" name="curPassword"> (required for updating profile)</td>
-        </tr>
-        <tr>
-            <td colspan="2"><center><input type="submit" name="submitUpdateProfile" value="Update profile"></center></td>
-        </tr>
-    </table>
-</form>
-<?php
-    display_content_end_block();
-}
-
 function display_new_task_page($form_action, $error, $info, $old_description_value) {
     display_content_start_block();
     display_error_or_info_if_any($error, $info);

@@ -14,7 +14,7 @@ class AuthorizationTab extends AbstractTab {
         $this->formAction = $formAction;
         $this->dbm = $dbm;
         $this->errorInfo = "";
-        $this->userId = UserCheckResult::USER_INVALID;
+        $this->userId = UserCheckResult::USER_NOT_LOGGED_IN;
     }
 
     public function getTabInfo() {
@@ -43,11 +43,11 @@ class AuthorizationTab extends AbstractTab {
 <?php
         display_content_end_block();
     }
-    
+
     public function isSubmitted() {
         return (isset($_POST['submitLogin']) && isset($_POST['login']) && isset($_POST['password']));
     }
-    
+
     public function handleSubmit() {
         $user = $_POST['login'];
         $md5 = md5($_POST['password']);
@@ -61,7 +61,7 @@ class AuthorizationTab extends AbstractTab {
             $this->errorInfo = "Database query error";
         }
     }
-    
+
     public function getUserId() {
         return $this->userId;
     }

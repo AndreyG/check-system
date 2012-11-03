@@ -71,7 +71,7 @@ class RegistrationTab extends AbstractTab {
     
     public function handleSubmit() {
         $pwd = $_POST['password'];
-        if ($pwd != $_POST['password2']) {
+        if ($pwd !== $_POST['password2']) {
             $this->errorInfo = "Passwords did not match";
         } else if ($_POST['login'] == "") {
             $this->errorInfo = "Empty login not allowed";

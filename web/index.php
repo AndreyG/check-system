@@ -13,6 +13,7 @@
 <?php
     require_once('authorization_tab.inc.php');
     require_once('registration_tab.inc.php');
+    require_once('profile_tab.inc.php');
 
     require_once('database_manager.inc.php');
     require_once('style.inc.php');
@@ -39,10 +40,7 @@
             $page = htmlentities($_GET['page']);
         }
         
-        $user_id = UserCheckResult::USER_INVALID;
-        
-        $register_page_error = "";
-        $register_page_info = "";
+        $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
         
         // if registration form submitted
         if ($registrationTab->isSubmitted()) {
@@ -76,50 +74,16 @@
 
                 $user_info = $dbm->getUserInfo($user_id);
                 
-                $profile_page_error = "";
-                $profile_page_info = "";
+                $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info);
+                
                 $new_task_page_error = "";
                 $new_task_page_info = "";
                 $new_task_page_old_description_value = "";
                 
                 // if update profile form submitted
-                if (isset($_POST['submitUpdateProfile']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email']) &&
-                    isset($_POST['password']) && isset($_POST['password2']) && isset($_POST['curPassword']) && ($user_info->isTeacher || isset($_POST['groupNumber']))) {
-
+                if ($profileTab->isSubmitted()) {
                     $page = "profile";
-                    
-                    $user_info->firstName = $_POST['firstName'];
-                    $user_info->lastName = $_POST['lastName'];
-                    if (!$user_info->isTeacher)
-                        $user_info->groupNumber = $_POST['groupNumber'];
-                    $user_info->email = $_POST['email'];
-
-                    if (md5($_POST['curPassword']) != $user_info->md5) {
-                        $profile_page_error = "Current password incorrect";
-                    } else if ($_POST['password'] != "" && $_POST['password'] != $_POST['password2']) {
-                        $profile_page_error = "New passwords did not match";
-                    } else if ($_POST['firstName'] == "") {
-                        $profile_page_error = "Empty first name not allowed";
-                    } else if ($_POST['lastName'] == "") {
-                        $profile_page_error = "Empty last name not allowed";
-                    } else if (!$user_info->isTeacher && $_POST['groupNumber'] == "") {
-                        $profile_page_error = "Empty group number not allowed";
-                    } else if ($_POST['email'] == "") {
-                        $profile_page_error = "Empty email not allowed";
-
-                    } else {
-                        $updRes = $dbm->updateUserInfo($user_id, $user_info->firstName, $user_info->lastName, $user_info->groupNumber,
-                                                       $user_info->email, ($_POST['password'] != "") ? md5($_POST['password']) : $user_info->md5);
-                        if ($updRes == UpdateUserResult::OK) {
-                            $profile_page_info = "Profile updated successfully";
-                            $user_info = $dbm->getUserInfo($user_id);
-                            $_SESSION['md5'] = $user_info->md5;
-                        } else if ($updRes == UpdateUserResult::ERR_EMAIL_EXISTS) {
-                            $profile_page_error = "Such email already registered";
-                        } else if ($updRes == UpdateUserResult::ERR_DB_ERROR) {
-                            $profile_page_error = "Database query error";
-                        }
-                    }
+                    $profileTab->handleSubmit();
                 }
 
                 // if a teacher is logged in
@@ -163,7 +127,7 @@
                         display_new_task_page($selfLink, $new_task_page_error, $new_task_page_info, $new_task_page_old_description_value);
                     } else if ($page == "profile") {
                         display_tabs("Profile", Tabs::$TEACHER);
-                        display_profile_page($selfLink, $profile_page_error, $profile_page_info, $user_info);
+                        $profileTab->displayContent();
                     } else {
                         display_tabs("...", Tabs::$TEACHER);
                     }
@@ -174,7 +138,7 @@
                         display_tabs("Submit", Tabs::$STUDENT);
                     } else if ($page == "profile") {
                         display_tabs("Profile", Tabs::$STUDENT);
-                        display_profile_page($selfLink, $profile_page_error, $profile_page_info, $user_info);
+                        $profileTab->displayContent();
                     } else {
                         display_tabs("Tasks", Tabs::$STUDENT);
                     }
