@@ -123,3 +123,5 @@ class ProfileTab extends AbstractTab {
         }
     }
 }
+
+?>

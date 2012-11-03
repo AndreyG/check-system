@@ -66,3 +66,5 @@ class AuthorizationTab extends AbstractTab {
         return $this->userId;
     }
 }
+
+?>

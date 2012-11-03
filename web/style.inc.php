@@ -57,35 +57,4 @@ function display_error_or_info_if_any($error, $info) {
     }
 }
 
-function display_new_task_page($form_action, $error, $info, $old_description_value) {
-    display_content_start_block();
-    display_error_or_info_if_any($error, $info);
-?>
-<form method="post" action="<?php echo $form_action; ?>" enctype="multipart/form-data">
-    <table>
-        <tr>
-            <td>Task name:</td>
-            <td><input type="text" size="20" name="name"></td>
-        </tr>
-        <tr>
-            <td>Description:</td>
-            <td><textarea name="description" cols="50" rows="3"><?php echo $old_description_value; ?></textarea></td>
-        </tr>
-        <tr>
-            <td>Task file:</td>
-            <td><input type="file" name="taskFile" /> (optional)</td>
-        </tr>
-        <tr>
-            <td>Student environment file:</td>
-            <td><input type="file" name="envFile" /> (optional)</td>
-        </tr>
-        <tr>
-            <td colspan="2"><center><input type="submit" name="submitNewTask" value="Add new task"></center></td>
-        </tr>
-    </table>
-</form>
-<?php
-    display_content_end_block();
-}
-
 ?>

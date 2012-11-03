@@ -101,3 +101,5 @@ class RegistrationTab extends AbstractTab {
         }
     }
 }
+
+?>

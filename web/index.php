@@ -14,6 +14,7 @@
     require_once('authorization_tab.inc.php');
     require_once('registration_tab.inc.php');
     require_once('profile_tab.inc.php');
+    require_once('new_task_tab.inc.php');
 
     require_once('database_manager.inc.php');
     require_once('style.inc.php');
@@ -76,10 +77,6 @@
                 
                 $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info);
                 
-                $new_task_page_error = "";
-                $new_task_page_info = "";
-                $new_task_page_old_description_value = "";
-                
                 // if update profile form submitted
                 if ($profileTab->isSubmitted()) {
                     $page = "profile";
@@ -89,42 +86,17 @@
                 // if a teacher is logged in
                 if ($user_info->isTeacher) {
 
-                    // if new task form submitted
-                    if (isset($_POST['submitNewTask']) && isset($_POST['name']) && isset($_POST['description']) && isset($_FILES['taskFile']) && isset($_FILES['envFile'])) {
-                        $page = "new_task";
-                        
-                        if ($_POST['name'] == "") {
-                            $new_task_page_error = "Task name can't be empty";
-                            $new_task_page_old_description_value = $_POST['description'];
-                        } else {
-                            $task_file_id = false;
-                            $env_file_id = false;
+                    $newTaskTab = new NewTaskTab($selfLink, $dbm);
 
-                            if ($_FILES['taskFile']['error'] != UPLOAD_ERR_NO_FILE) {
-                                $task_file_id = $dbm->saveFile($_FILES['taskFile']);
-                                if ($task_file_id === false) {
-                                    $new_task_page_error = "Error while uploading task file";
-                                    $new_task_page_old_description_value = $_POST['description'];
-                                }
-                            }
-                            if ($_FILES['envFile']['error'] != UPLOAD_ERR_NO_FILE) {
-                                $env_file_id = $dbm->saveFile($_FILES['envFile']);
-                                if ($env_file_id === false) {
-                                    $new_task_page_error = "Error while uploading student env file";
-                                    $new_task_page_old_description_value = $_POST['description'];
-                                }
-                            }
-                            
-                            // if still no error
-                            if ($new_task_page_error == "") {
-                                
-                            }
-                        }
+                    // if new task form submitted
+                    if ($newTaskTab->isSubmitted()) {
+                        $page = "new_task";
+                        $newTaskTab->handleSubmit();
                     }
 
                     if ($page == "new_task") {
                         display_tabs("Add new task", Tabs::$TEACHER);
-                        display_new_task_page($selfLink, $new_task_page_error, $new_task_page_info, $new_task_page_old_description_value);
+                        $newTaskTab->displayContent();
                     } else if ($page == "profile") {
                         display_tabs("Profile", Tabs::$TEACHER);
                         $profileTab->displayContent();
