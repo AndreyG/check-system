@@ -18,6 +18,7 @@
     require_once('tabs/logout_tab.inc.php');
     
     require_once('tabs/teacher/new_task_tab.inc.php');
+    require_once('tabs/teacher/all_tasks_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
@@ -94,8 +95,10 @@
 
                 // if a teacher is logged in
                 if ($user_info->isTeacher) {
+                    $allTasksTab = new AllTasksTab($dbm);
                     $newTaskTab = new NewTaskTab($selfLink, $dbm);
                     
+                    $tabHolder->addTab($allTasksTab);
                     $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($logoutTab);
@@ -106,7 +109,9 @@
                         $newTaskTab->handleSubmit();
                     }
 
-                    if ($page === "new_task") {
+                    if ($page === "all_tasks") {
+                        $tabHolder->display($allTasksTab);
+                    } else if ($page === "new_task") {
                         $tabHolder->display($newTaskTab);
                     } else if ($page === "profile") {
                         $tabHolder->display($profileTab);
