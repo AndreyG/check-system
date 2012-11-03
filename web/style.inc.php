@@ -52,29 +52,6 @@ function display_error_or_info_if_any($error, $info) {
     }
 }
 
-function display_login_page($form_action, $error) {
-    display_content_start_block();
-    display_error_or_info_if_any($error, "");
-?>
-<form method="post" action="<?php echo $form_action; ?>">
-    <table>
-        <tr>
-            <td>Login:</td>
-            <td><input type="text" size="20" name="login"></td>
-        </tr>
-        <tr>
-            <td>Password:</td>
-            <td><input type="password" size="20" name="password"></td>
-        </tr>
-        <tr>
-            <td colspan="2"><center><input type="submit" name="submitLogin" value="Login"></center></td>
-        </tr>
-    </table>
-</form>
-<?php
-    display_content_end_block();
-}
-
 function display_register_page($form_action, $error, $info) {
     display_content_start_block();
     display_error_or_info_if_any($error, $info);

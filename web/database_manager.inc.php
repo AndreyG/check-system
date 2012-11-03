@@ -53,7 +53,7 @@ class DatabaseManager {
     }
     
     private function escapeStr($s) {
-        return $this->real_escape_string($s);
+        return $this->mysqli->real_escape_string($s);
     }
 
     public function connect($db_server, $db_user, $db_passwd, $db_name) {
@@ -179,7 +179,7 @@ class DatabaseManager {
         $fileDataMD5 = md5($fileData);
         
         //insert to database
-        if ($this->query('INSERT INTO files (name, size, data, data_md5) VALUES ("' . $fileName . '", ' . $fileSize . ', "' . $fileData . '", "' . $fileDataMD5 . '")') {
+        if ($this->query('INSERT INTO files (name, size, data, data_md5) VALUES ("' . $fileName . '", ' . $fileSize . ', "' . $fileData . '", "' . $fileDataMD5 . '")')) {
             return $this->mysqli->insert_id;
         } else {
             return false;

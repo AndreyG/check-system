@@ -16,6 +16,8 @@
         return $client_ip;
     }
 
+    require_once('authorization_tab.inc.php');
+
     require_once('database_manager.inc.php');
     require_once('style.inc.php');
     require_once('settings.inc.php');
@@ -33,6 +35,8 @@
         session_start();
         session_regenerate_id(true);
         
+        $authorizationTab = new AuthorizationTab($selfLink, $dbm);
+        
         $page = "";
         if (isset($_GET['page'])) {
             $page = htmlentities($_GET['page']);
@@ -40,7 +44,6 @@
         
         $user_id = UserCheckResult::USER_INVALID;
         
-        $login_page_error = "";
         $register_page_error = "";
         $register_page_info = "";
         
@@ -81,18 +84,9 @@
             }
 
         // if login form submitted
-        } else if (isset($_POST['submitLogin']) && isset($_POST['login']) && isset($_POST['password'])) {
-            $user = $_POST['login'];
-            $md5 = md5($_POST['password']);
-            $user_id = $dbm->checkUserMD5($user, $md5);
-            if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
-                $_SESSION['user'] = $user;
-                $_SESSION['md5'] = $md5;
-            } else if ($user_id == UserCheckResult::USER_INVALID) {
-                $login_page_error = "Incorrect login or password";
-            } else if ($user_id == UserCheckResult::DB_ERROR) {
-                $login_page_error = "Database query error";
-            }
+        } else if ($authorizationTab->isSubmitted()) {
+            $authorizationTab->handleSubmit();
+            $user_id = $authorizationTab->getUserId();
 
         // if session data is set
         } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] != "" && $_SESSION['md5'] != "") {
@@ -177,7 +171,7 @@
                             $env_file_id = false;
 
                             if ($_FILES['taskFile']['error'] != UPLOAD_ERR_NO_FILE) {
-                                $task_file_id = $dbm->saveFile($_FILES['taskFile'])
+                                $task_file_id = $dbm->saveFile($_FILES['taskFile']);
                                 if ($task_file_id === false) {
                                     $new_task_page_error = "Error while uploading task file";
                                     $new_task_page_old_description_value = $_POST['description'];
@@ -230,7 +224,7 @@
                 display_register_page($selfLink, $register_page_error, $register_page_info);
             } else {
                 display_tabs("Authorization", Tabs::$ANONYMOUS);
-                display_login_page($selfLink, $login_page_error);
+                $authorizationTab->displayContent();
             }
         }
         
