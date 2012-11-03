@@ -28,7 +28,8 @@ SET time_zone = "+00:00";
 
 CREATE TABLE IF NOT EXISTS `files` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `file_name` text NOT NULL,
+  `name` text NOT NULL,
+  `size` int(32) NOT NULL,
   `data` longblob NOT NULL,
   `data_md5` varchar(32) NOT NULL,
   PRIMARY KEY (`id`)

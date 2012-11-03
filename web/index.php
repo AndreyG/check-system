@@ -27,7 +27,7 @@
     if (!$dbm->connect($db_server, $db_user, $db_passwd, $db_name)) {
         display_tabs(0, Tabs::$FATAL_ERROR);
         $connError = $dbm->getConnError();
-        display_content("<p>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</p>");
+        display_content("<p><b><font color=#cc0000>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</font></b></p>");
     } else {
 
         session_start();
@@ -82,7 +82,7 @@
 
         // if login form submitted
         } else if (isset($_POST['submitLogin']) && isset($_POST['login']) && isset($_POST['password'])) {
-            $user = htmlentities($_POST['login']);
+            $user = $_POST['login'];
             $md5 = md5($_POST['password']);
             $user_id = $dbm->checkUserMD5($user, $md5);
             if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
@@ -166,14 +166,35 @@
                 if ($user_info->isTeacher) {
 
                     // if new task form submitted
-                    if (isset($_POST['submitNewTask']) && isset($_POST['name']) && isset($_POST['description'])) {
+                    if (isset($_POST['submitNewTask']) && isset($_POST['name']) && isset($_POST['description']) && isset($_FILES['taskFile']) && isset($_FILES['envFile'])) {
                         $page = "new_task";
                         
                         if ($_POST['name'] == "") {
                             $new_task_page_error = "Task name can't be empty";
                             $new_task_page_old_description_value = $_POST['description'];
                         } else {
-                            //...
+                            $task_file_id = false;
+                            $env_file_id = false;
+
+                            if ($_FILES['taskFile']['error'] != UPLOAD_ERR_NO_FILE) {
+                                $task_file_id = $dbm->saveFile($_FILES['taskFile'])
+                                if ($task_file_id === false) {
+                                    $new_task_page_error = "Error while uploading task file";
+                                    $new_task_page_old_description_value = $_POST['description'];
+                                }
+                            }
+                            if ($_FILES['envFile']['error'] != UPLOAD_ERR_NO_FILE) {
+                                $env_file_id = $dbm->saveFile($_FILES['envFile']);
+                                if ($env_file_id === false) {
+                                    $new_task_page_error = "Error while uploading student env file";
+                                    $new_task_page_old_description_value = $_POST['description'];
+                                }
+                            }
+                            
+                            // if still no error
+                            if ($new_task_page_error == "") {
+                                
+                            }
                         }
                     }
 

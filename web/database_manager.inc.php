@@ -51,6 +51,10 @@ class DatabaseManager {
         file_put_contents('sql_queries.log', $q . chr(10), FILE_APPEND);
         return $this->mysqli->query($q);
     }
+    
+    private function escapeStr($s) {
+        return $this->real_escape_string($s);
+    }
 
     public function connect($db_server, $db_user, $db_passwd, $db_name) {
         $this->mysqli = new mysqli($db_server, $db_user, $db_passwd, $db_name);
@@ -66,8 +70,8 @@ class DatabaseManager {
     }
     
     public function checkUserMD5($login, $md5) {
-        $login = htmlentities($login);
-        $md5 = htmlentities($md5);
+        $login = $this->escapeStr($login);
+        $md5 = $this->escapeStr($md5);
         
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '" AND md5 = "' . $md5 . '"')) {
             if ($result->num_rows == 1) {
@@ -82,7 +86,7 @@ class DatabaseManager {
     }
 
     public function getUserInfo($id) {
-        $id = htmlentities($id);
+        $id = $this->escapeStr($id);
 
         if ($result = $this->query('SELECT * FROM users WHERE id = ' . $id)) {
             if ($result->num_rows == 1) {
@@ -97,13 +101,13 @@ class DatabaseManager {
     }
     
     public function registerNewUser($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $ip) {
-        $login = htmlentities($login);
-        $firstName = htmlentities($firstName);
-        $lastName = htmlentities($lastName);
-        $groupNumber = htmlentities($groupNumber);
-        $email = htmlentities($email);
-        $md5 = htmlentities($md5);
-        $ip = htmlentities($ip);
+        $login = $this->escapeStr($login);
+        $firstName = $this->escapeStr($firstName);
+        $lastName = $this->escapeStr($lastName);
+        $groupNumber = $this->escapeStr($groupNumber);
+        $email = $this->escapeStr($email);
+        $md5 = $this->escapeStr($md5);
+        $ip = $this->escapeStr($ip);
         
         //perform checks
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '"')) {
@@ -122,7 +126,7 @@ class DatabaseManager {
         //insert to database
         if ($this->query('INSERT INTO users (login, firstName, lastName, groupNumber, email, md5, isTeacher, lastIP) VALUES ("' .
                                     $login . '", "' . $firstName . '", "' . $lastName . '", "' . $groupNumber . '", "'. $email .'", "' . $md5 .
-                                    '", ' . ($isTeacher ? '1' : '0') . ', "' . $ip . '")') == true) {
+                                    '", ' . (($isTeacher === true) ? '1' : '0') . ', "' . $ip . '")') == true) {
             return RegistrationResult::OK;
         } else {
             return RegistrationResult::ERR_DB_ERROR;
@@ -130,12 +134,12 @@ class DatabaseManager {
     }
     
     public function updateUserInfo($id, $firstName, $lastName, $groupNumber, $email, $md5) {
-        $id = htmlentities($id);
-        $firstName = htmlentities($firstName);
-        $lastName = htmlentities($lastName);
-        $groupNumber = htmlentities($groupNumber);
-        $email = htmlentities($email);
-        $md5 = htmlentities($md5);
+        $id = $this->escapeStr($id);
+        $firstName = $this->escapeStr($firstName);
+        $lastName = $this->escapeStr($lastName);
+        $groupNumber = $this->escapeStr($groupNumber);
+        $email = $this->escapeStr($email);
+        $md5 = $this->escapeStr($md5);
         
         //perform check
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(email) = "' . strtolower($email) . '" AND id != ' . $id)) {
@@ -155,12 +159,33 @@ class DatabaseManager {
     }
     
     public function updateUserLastIP($id, $ip) {
-        $id = htmlentities($id);
-        $ip = htmlentities($ip);
+        $id = $this->escapeStr($id);
+        $ip = $this->escapeStr($ip);
         
         return ($this->query('UPDATE users SET lastIP = "' . $ip . '" WHERE id = ' . $id));
     }
     
+    public function saveFile($fileInfo) {
+        if ($fileInfo['error'] == UPLOAD_ERR_NO_FILE)
+            return false;
+        if ($fileInfo['error'] != UPLOAD_ERR_OK)
+            return false;
+        if (!is_uploaded_file($fileInfo['tmp_name']))
+            return false;
+
+        $fileName = $this->escapeStr(basename($fileInfo['name']));
+        $fileSize = $this->escapeStr($fileInfo['size']);
+        $fileData = $this->escapeStr(file_get_contents($fileInfo['tmp_name']));
+        $fileDataMD5 = md5($fileData);
+        
+        //insert to database
+        if ($this->query('INSERT INTO files (name, size, data, data_md5) VALUES ("' . $fileName . '", ' . $fileSize . ', "' . $fileData . '", "' . $fileDataMD5 . '")') {
+            return $this->mysqli->insert_id;
+        } else {
+            return false;
+        }
+    }
+
     public function close() {
         $this->mysqli->close();
     }
