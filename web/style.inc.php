@@ -1,19 +1,12 @@
 <?php
 
-class Tabs {
-    public static $FATAL_ERROR = array(array('Fatal Error', ''));
-    public static $ANONYMOUS = array(array('Authorization', '?page=login'), array('Registration', '?page=register'));
-    public static $STUDENT = array(array('Tasks', '?page=tasks'), array('Submit', '?page=submit'), array('Profile', '?page=profile'), array('Logout', '?page=logout'));
-    public static $TEACHER = array(array('Add new task', '?page=new_task'), array('Profile', '?page=profile'), array('Logout', '?page=logout'));
-};
-
 function getClientIP() {
     $client_ip = ( !empty($HTTP_SERVER_VARS['REMOTE_ADDR']) ) ? $HTTP_SERVER_VARS['REMOTE_ADDR'] : ( ( !empty($HTTP_ENV_VARS['REMOTE_ADDR']) ) ? $HTTP_ENV_VARS['REMOTE_ADDR'] : getenv('REMOTE_ADDR') );
     return $client_ip;
 }
 
-// $activeTab - tab name or tab index
-function display_tabs($activeTab, $tabsArray) {
+// $activeTab - ref to current tab; $tabsArray holds TabInfos
+function displayTabs($activeTab, $tabsArray) {
     $tabsCount = count($tabsArray);
     if ($tabsCount <= 0)
         return;
@@ -22,13 +15,15 @@ function display_tabs($activeTab, $tabsArray) {
     echo "<ul id=\"lineTabs$tabsCount\">\n";
     $tabNumber = 0;
     foreach ($tabsArray as $tab) {
-        echo "    <li><a href=\"$tab[1]\"";
-        if ($tab[0] === $activeTab) {
-            echo ' class="active"';
-        } else if ($activeTab === $tabsCount - $tabNumber - 1) {
+        if ($tab->page === "") {
+            echo '    <li><a href=""';
+        } else {
+            echo '    <li><a href="?page=' . $tab->page . '"';
+        }
+        if ($tab->title === $activeTab->title && $tab->page === $activeTab->page) {
             echo ' class="active"';
         }
-        echo ">$tab[0]</a></li>\n";
+        echo ">" . $tab->title . "</a></li>\n";
         ++$tabNumber;
     }
     echo "</ul>\n";

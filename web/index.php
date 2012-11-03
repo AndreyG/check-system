@@ -11,23 +11,30 @@
 <div id="wrap">
 
 <?php
+    require_once('fatal_error_tab.inc.php');
     require_once('authorization_tab.inc.php');
     require_once('registration_tab.inc.php');
     require_once('profile_tab.inc.php');
+    require_once('logout_tab.inc.php');
     require_once('new_task_tab.inc.php');
 
+    require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
-    require_once('style.inc.php');
     require_once('settings.inc.php');
-    
+
     $selfLink = htmlspecialchars($_SERVER['PHP_SELF']);
-    
+
+    $tabHolder = new TabHolder();
+
     $dbm = new DatabaseManager();
-    
+
     if (!$dbm->connect($db_server, $db_user, $db_passwd, $db_name)) {
-        display_tabs(0, Tabs::$FATAL_ERROR);
         $connError = $dbm->getConnError();
-        display_content("<p><b><font color=#cc0000>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</font></b></p>");
+
+        $fatalErrorTab = new FatalErrorTab("<p><b><font color=#cc0000>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</font></b></p>");
+
+        $tabHolder->addTab($fatalErrorTab);
+        $tabHolder->display($fatalErrorTab);
     } else {
 
         session_start();
@@ -74,9 +81,10 @@
             } else {
 
                 $user_info = $dbm->getUserInfo($user_id);
-                
+
                 $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info);
-                
+                $logoutTab = new LogoutTab();
+
                 // if update profile form submitted
                 if ($profileTab->isSubmitted()) {
                     $page = "profile";
@@ -85,8 +93,11 @@
 
                 // if a teacher is logged in
                 if ($user_info->isTeacher) {
-
                     $newTaskTab = new NewTaskTab($selfLink, $dbm);
+                    
+                    $tabHolder->addTab($newTaskTab);
+                    $tabHolder->addTab($profileTab);
+                    $tabHolder->addTab($logoutTab);
 
                     // if new task form submitted
                     if ($newTaskTab->isSubmitted()) {
@@ -95,24 +106,28 @@
                     }
 
                     if ($page === "new_task") {
-                        display_tabs("Add new task", Tabs::$TEACHER);
-                        $newTaskTab->displayContent();
+                        $tabHolder->display($newTaskTab);
                     } else if ($page === "profile") {
-                        display_tabs("Profile", Tabs::$TEACHER);
-                        $profileTab->displayContent();
+                        $tabHolder->display($profileTab);
                     } else {
-                        display_tabs("...", Tabs::$TEACHER);
+                        // TEMPORARILY
+                        $tabHolder->display($profileTab);
                     }
 
                 // if a student is logged in
                 } else {
+                    $tabHolder->addTab($profileTab);
+                    $tabHolder->addTab($logoutTab);
+
                     if ($page === "submit") {
-                        display_tabs("Submit", Tabs::$STUDENT);
+                        //display_tabs("Submit", Tabs::$STUDENT);
                     } else if ($page === "profile") {
-                        display_tabs("Profile", Tabs::$STUDENT);
-                        $profileTab->displayContent();
+                        $tabHolder->display($profileTab);
                     } else {
-                        display_tabs("Tasks", Tabs::$STUDENT);
+                        //display_tabs("Tasks", Tabs::$STUDENT);
+                        
+                        // TEMPORARILY
+                        $tabHolder->display($profileTab);
                     }
                 }
 
@@ -121,12 +136,13 @@
 
         // if not logged in
         if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
+            $tabHolder->addTab($authorizationTab);
+            $tabHolder->addTab($registrationTab);
+
             if ($page === "register") {
-                display_tabs("Registration", Tabs::$ANONYMOUS);
-                $registrationTab->displayContent();
+                $tabHolder->display($registrationTab);
             } else {
-                display_tabs("Authorization", Tabs::$ANONYMOUS);
-                $authorizationTab->displayContent();
+                $tabHolder->display($authorizationTab);
             }
         }
         
