@@ -95,29 +95,29 @@ class ProfileTab extends AbstractTab {
             $this->userInfo->groupNumber = $_POST['groupNumber'];
         $this->userInfo->email = $_POST['email'];
 
-        if (md5($_POST['curPassword']) != $this->userInfo->md5) {
+        if (md5($_POST['curPassword']) !== $this->userInfo->md5) {
             $this->errorInfo = "Current password incorrect";
-        } else if ($_POST['password'] != "" && $_POST['password'] !== $_POST['password2']) {
+        } else if ($_POST['password'] !== "" && $_POST['password'] !== $_POST['password2']) {
             $this->errorInfo = "New passwords did not match";
-        } else if ($_POST['firstName'] == "") {
+        } else if ($_POST['firstName'] === "") {
             $this->errorInfo = "Empty first name not allowed";
-        } else if ($_POST['lastName'] == "") {
+        } else if ($_POST['lastName'] === "") {
             $this->errorInfo = "Empty last name not allowed";
-        } else if (!$this->userInfo->isTeacher && $_POST['groupNumber'] == "") {
+        } else if (!$this->userInfo->isTeacher && $_POST['groupNumber'] === "") {
             $this->errorInfo = "Empty group number not allowed";
-        } else if ($_POST['email'] == "") {
+        } else if ($_POST['email'] === "") {
             $this->errorInfo = "Empty email not allowed";
 
         } else {
             $updRes = $this->dbm->updateUserInfo($this->userId, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupNumber,
                                             $this->userInfo->email, ($_POST['password'] != "") ? md5($_POST['password']) : $this->userInfo->md5);
-            if ($updRes == UpdateUserResult::OK) {
+            if ($updRes === UpdateUserResult::OK) {
                 $this->successInfo = "Profile updated successfully";
                 $this->userInfo = $this->dbm->getUserInfo($this->userId);
                 $_SESSION['md5'] = $this->userInfo->md5;
-            } else if ($updRes == UpdateUserResult::ERR_EMAIL_EXISTS) {
+            } else if ($updRes === UpdateUserResult::ERR_EMAIL_EXISTS) {
                 $this->errorInfo = "Such email already registered";
-            } else if ($updRes == UpdateUserResult::ERR_DB_ERROR) {
+            } else if ($updRes === UpdateUserResult::ERR_DB_ERROR) {
                 $this->errorInfo = "Database query error";
             }
         }

@@ -54,7 +54,7 @@
             $user_id = $authorizationTab->getUserId();
 
         // if session data is set
-        } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] != "" && $_SESSION['md5'] != "") {
+        } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] !== "" && $_SESSION['md5'] !== "") {
             $user_id = $dbm->checkUserMD5($_SESSION['user'], $_SESSION['md5']);
             if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
                 $_SESSION['user'] = "";
@@ -67,7 +67,7 @@
         if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
             $dbm->updateUserLastIP($user_id, getClientIP());
 
-            if ($page == "logout") {
+            if ($page === "logout") {
                 $_SESSION['user'] = "";
                 $_SESSION['md5'] = "";
                 $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
@@ -94,10 +94,10 @@
                         $newTaskTab->handleSubmit();
                     }
 
-                    if ($page == "new_task") {
+                    if ($page === "new_task") {
                         display_tabs("Add new task", Tabs::$TEACHER);
                         $newTaskTab->displayContent();
-                    } else if ($page == "profile") {
+                    } else if ($page === "profile") {
                         display_tabs("Profile", Tabs::$TEACHER);
                         $profileTab->displayContent();
                     } else {
@@ -106,9 +106,9 @@
 
                 // if a student is logged in
                 } else {
-                    if ($page == "submit") {
+                    if ($page === "submit") {
                         display_tabs("Submit", Tabs::$STUDENT);
-                    } else if ($page == "profile") {
+                    } else if ($page === "profile") {
                         display_tabs("Profile", Tabs::$STUDENT);
                         $profileTab->displayContent();
                     } else {
@@ -121,7 +121,7 @@
 
         // if not logged in
         if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
-            if ($page == "register") {
+            if ($page === "register") {
                 display_tabs("Registration", Tabs::$ANONYMOUS);
                 $registrationTab->displayContent();
             } else {
