@@ -64,15 +64,15 @@ class ProfileTab extends AbstractTab {
         </tr>
         <tr>
             <td>New password:</td>
-            <td><input type="password" size="20" name="password"> (leave empty if you don't need to change it)</td>
+            <td><input type="password" size="20" name="newPassword"> (leave empty if you don't need to change it)</td>
         </tr>
         <tr>
             <td>Repeat new password:</td>
-            <td><input type="password" size="20" name="password2"></td>
+            <td><input type="password" size="20" name="newPassword2"></td>
         </tr>
         <tr>
             <td>Current password:</td>
-            <td><input type="password" size="20" name="curPassword"> (required for updating profile)</td>
+            <td><input type="password" size="20" name="password"> (required for updating profile)</td>
         </tr>
         <tr>
             <td colspan="2"><center><input type="submit" name="submitUpdateProfile" value="Update profile"></center></td>
@@ -85,7 +85,7 @@ class ProfileTab extends AbstractTab {
 
     public function isSubmitted() {
         return (isset($_POST['submitUpdateProfile']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email']) &&
-                isset($_POST['password']) && isset($_POST['password2']) && isset($_POST['curPassword']) && ($this->userInfo->isTeacher || isset($_POST['groupNumber'])));
+                isset($_POST['newPassword']) && isset($_POST['newPassword2']) && isset($_POST['password']) && ($this->userInfo->isTeacher || isset($_POST['groupNumber'])));
     }
 
     public function handleSubmit() {
@@ -95,9 +95,9 @@ class ProfileTab extends AbstractTab {
             $this->userInfo->groupNumber = $_POST['groupNumber'];
         $this->userInfo->email = $_POST['email'];
 
-        if (md5($_POST['curPassword']) !== $this->userInfo->md5) {
+        if (md5($_POST['password']) !== $this->userInfo->md5) {
             $this->errorInfo = "Current password incorrect";
-        } else if ($_POST['password'] !== "" && $_POST['password'] !== $_POST['password2']) {
+        } else if ($_POST['newPassword'] !== "" && $_POST['newPassword'] !== $_POST['newPassword2']) {
             $this->errorInfo = "New passwords did not match";
         } else if ($_POST['firstName'] === "") {
             $this->errorInfo = "Empty first name not allowed";
@@ -110,7 +110,7 @@ class ProfileTab extends AbstractTab {
 
         } else {
             $updRes = $this->dbm->updateUserInfo($this->userId, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupNumber,
-                                            $this->userInfo->email, ($_POST['password'] != "") ? md5($_POST['password']) : $this->userInfo->md5);
+                                            $this->userInfo->email, ($_POST['newPassword'] != "") ? md5($_POST['newPassword']) : $this->userInfo->md5);
             if ($updRes === UpdateUserResult::OK) {
                 $this->successInfo = "Profile updated successfully";
                 $this->userInfo = $this->dbm->getUserInfo($this->userId);

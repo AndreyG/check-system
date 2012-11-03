@@ -21,6 +21,15 @@ class UserCheckResult {
     const MIN_VALID_USER_ID  = 1;
 }
 
+class SaveFileResult {
+    const ERR_NO_FILE       = -3;
+    const ERR_DB_ERROR      = -2;
+    const ERR_FILE_TOO_BIG  = -1;
+    const ERR_UPLOAD_ERROR  = 0;
+    //positive result is file id in database
+    const MIN_VALID_FILE_ID = 1;
+}
+
 class UserInfo {
     public $login;
     public $firstName;
@@ -44,11 +53,19 @@ class UserInfo {
 }
 
 class DatabaseManager {
+    public $maxUploadFileSize;
+
     private $mysqli;
     private $connError;
 
+    function __construct($maxUploadFileSize) {
+        $this->maxUploadFileSize = $maxUploadFileSize;
+    }
+
     private function query($q) {
-        file_put_contents('sql_queries.log', $q . chr(10), FILE_APPEND);
+        if (strlen($q) < 1024) {
+            file_put_contents('sql_queries.log', $q . chr(10), FILE_APPEND);
+        }
         return $this->mysqli->query($q);
     }
     
@@ -56,6 +73,7 @@ class DatabaseManager {
         return $this->mysqli->real_escape_string($s);
     }
 
+    // returns true or false
     public function connect($db_server, $db_user, $db_passwd, $db_name) {
         $this->mysqli = new mysqli($db_server, $db_user, $db_passwd, $db_name);
         if ($this->mysqli->connect_errno) {
@@ -68,7 +86,8 @@ class DatabaseManager {
     public function getConnError() {
         return $this->connError;
     }
-    
+
+    // returns UserCheckResult
     public function checkUserMD5($login, $md5) {
         $login = $this->escapeStr($login);
         $md5 = $this->escapeStr($md5);
@@ -85,6 +104,7 @@ class DatabaseManager {
         }
     }
 
+    // returns UserInfo or false
     public function getUserInfo($id) {
         $id = $this->escapeStr($id);
 
@@ -100,6 +120,7 @@ class DatabaseManager {
         }
     }
     
+    // returns RegistrationResult
     public function registerNewUser($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $ip) {
         $login = $this->escapeStr($login);
         $firstName = $this->escapeStr($firstName);
@@ -133,6 +154,7 @@ class DatabaseManager {
         }
     }
     
+    // returns UpdateUserResult
     public function updateUserInfo($id, $firstName, $lastName, $groupNumber, $email, $md5) {
         $id = $this->escapeStr($id);
         $firstName = $this->escapeStr($firstName);
@@ -157,7 +179,8 @@ class DatabaseManager {
             return UpdateUserResult::ERR_DB_ERROR;
         }
     }
-    
+
+    // returns true or false
     public function updateUserLastIP($id, $ip) {
         $id = $this->escapeStr($id);
         $ip = $this->escapeStr($ip);
@@ -165,13 +188,16 @@ class DatabaseManager {
         return ($this->query('UPDATE users SET lastIP = "' . $ip . '" WHERE id = ' . $id));
     }
     
+    // returns SaveFileResult
     public function saveFile($fileInfo) {
+        if ($fileInfo['size'] > $this->maxUploadFileSize)
+            return SaveFileResult::ERR_FILE_TOO_BIG;
         if ($fileInfo['error'] == UPLOAD_ERR_NO_FILE)
-            return false;
+            return SaveFileResult::ERR_NO_FILE;
         if ($fileInfo['error'] != UPLOAD_ERR_OK)
-            return false;
+            return SaveFileResult::ERR_UPLOAD_ERROR;
         if (!is_uploaded_file($fileInfo['tmp_name']))
-            return false;
+            return SaveFileResult::ERR_UPLOAD_ERROR;
 
         $fileName = $this->escapeStr(basename($fileInfo['name']));
         $fileSize = $this->escapeStr($fileInfo['size']);
@@ -182,8 +208,31 @@ class DatabaseManager {
         if ($this->query('INSERT INTO files (name, size, data, data_md5) VALUES ("' . $fileName . '", ' . $fileSize . ', "' . $fileData . '", "' . $fileDataMD5 . '")')) {
             return $this->mysqli->insert_id;
         } else {
-            return false;
+            return SaveFileResult::ERR_DB_ERROR;
         }
+    }
+
+    // returns true or false
+    public function addNewTask($name, $description, $taskFileId, $envFileId) {
+        $name = $this->escapeStr($name);
+        $description = $this->escapeStr($description);
+        
+        $q_p1 = "";
+        $q_p2 = "";
+        $q_p3 = "";
+        $q_p4 = "";
+        
+        if ($taskFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
+            $q_p1 = ', task_file_id';
+            $q_p3 = ', ' . $this->escapeStr($taskFileId);
+        }
+        if ($envFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
+            $envFileId = $this->escapeStr($envFileId);
+            $q_p2 = ', env_file_id';
+            $q_p4 = ', ' . $this->escapeStr($envFileId);
+        }
+
+        return ($this->query('INSERT INTO tasks (name, description' . $q_p1 . $q_p2 . ') VALUES ("' . $name . '", "' . $description . '"' . $q_p3 . $q_p4 . ')'));
     }
 
     public function close() {
