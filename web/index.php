@@ -11,12 +11,8 @@
 <div id="wrap">
 
 <?php
-    function getClientIP() {
-        $client_ip = ( !empty($HTTP_SERVER_VARS['REMOTE_ADDR']) ) ? $HTTP_SERVER_VARS['REMOTE_ADDR'] : ( ( !empty($HTTP_ENV_VARS['REMOTE_ADDR']) ) ? $HTTP_ENV_VARS['REMOTE_ADDR'] : getenv('REMOTE_ADDR') );
-        return $client_ip;
-    }
-
     require_once('authorization_tab.inc.php');
+    require_once('registration_tab.inc.php');
 
     require_once('database_manager.inc.php');
     require_once('style.inc.php');
@@ -36,6 +32,7 @@
         session_regenerate_id(true);
         
         $authorizationTab = new AuthorizationTab($selfLink, $dbm);
+        $registrationTab = new RegistrationTab($selfLink, $dbm);
         
         $page = "";
         if (isset($_GET['page'])) {
@@ -48,41 +45,10 @@
         $register_page_info = "";
         
         // if registration form submitted
-        if (isset($_POST['submitRegister']) && isset($_POST['login']) && isset($_POST['firstName']) && isset($_POST['lastName']) &&
-            isset($_POST['groupNumber']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2'])) {
-
+        if ($registrationTab->isSubmitted()) {
             $page = "register";
-
-            $pwd = $_POST['password'];
-            if ($pwd != $_POST['password2']) {
-                $register_page_error = "Passwords did not match";
-            } else if ($_POST['login'] == "") {
-                $register_page_error = "Empty login not allowed";
-            } else if ($_POST['firstName'] == "") {
-                $register_page_error = "Empty first name not allowed";
-            } else if ($_POST['lastName'] == "") {
-                $register_page_error = "Empty last name not allowed";
-            } else if ($_POST['groupNumber'] == "") {
-                $register_page_error = "Empty group number not allowed";
-            } else if ($_POST['email'] == "") {
-                $register_page_error = "Empty email not allowed";
-            } else if ($_POST['password'] == "") {
-                $register_page_error = "Empty password not allowed";
-
-            } else {
-                $regRes = $dbm->registerNewUser($_POST['login'], $_POST['firstName'], $_POST['lastName'], $_POST['groupNumber'],
-                                               $_POST['email'], md5($_POST['password']), false, getClientIP());
-                if ($regRes == RegistrationResult::OK) {
-                    $register_page_info = "Registered successfully";
-                } else if ($regRes == RegistrationResult::ERR_LOGIN_EXISTS) {
-                    $register_page_error = "Such login already registered";
-                } else if ($regRes == RegistrationResult::ERR_EMAIL_EXISTS) {
-                    $register_page_error = "Such email already registered";
-                } else if ($regRes == RegistrationResult::ERR_DB_ERROR) {
-                    $register_page_error = "Database query error";
-                }
-            }
-
+            $registrationTab->handleSubmit();
+        
         // if login form submitted
         } else if ($authorizationTab->isSubmitted()) {
             $authorizationTab->handleSubmit();
@@ -221,7 +187,7 @@
         if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
             if ($page == "register") {
                 display_tabs("Registration", Tabs::$ANONYMOUS);
-                display_register_page($selfLink, $register_page_error, $register_page_info);
+                $registrationTab->displayContent();
             } else {
                 display_tabs("Authorization", Tabs::$ANONYMOUS);
                 $authorizationTab->displayContent();

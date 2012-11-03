@@ -7,6 +7,11 @@ class Tabs {
     public static $TEACHER = array(array('Add new task', '?page=new_task'), array('Profile', '?page=profile'), array('Logout', '?page=logout'));
 };
 
+function getClientIP() {
+    $client_ip = ( !empty($HTTP_SERVER_VARS['REMOTE_ADDR']) ) ? $HTTP_SERVER_VARS['REMOTE_ADDR'] : ( ( !empty($HTTP_ENV_VARS['REMOTE_ADDR']) ) ? $HTTP_ENV_VARS['REMOTE_ADDR'] : getenv('REMOTE_ADDR') );
+    return $client_ip;
+}
+
 // $activeTab - tab name or tab index
 function display_tabs($activeTab, $tabsArray) {
     $tabsCount = count($tabsArray);
@@ -50,49 +55,6 @@ function display_error_or_info_if_any($error, $info) {
     if ($info != "") {
         echo "<p><b><font color=#009900>$info</font></b></p>\n";
     }
-}
-
-function display_register_page($form_action, $error, $info) {
-    display_content_start_block();
-    display_error_or_info_if_any($error, $info);
-?>
-<form method="post" action="<?php echo $form_action; ?>">
-    <table>
-        <tr>
-            <td>Login:</td>
-            <td><input type="text" size="20" name="login"></td>
-        </tr>
-        <tr>
-            <td>First name:</td>
-            <td><input type="text" size="20" name="firstName"></td>
-        </tr>
-        <tr>
-            <td>Last name:</td>
-            <td><input type="text" size="20" name="lastName"></td>
-        </tr>
-        <tr>
-            <td>Group number:</td>
-            <td><input type="text" size="20" name="groupNumber"></td>
-        </tr>
-        <tr>
-            <td>E-mail:</td>
-            <td><input type="text" size="20" name="email"></td>
-        </tr>
-        <tr>
-            <td>Password:</td>
-            <td><input type="password" size="20" name="password"></td>
-        </tr>
-        <tr>
-            <td>Repeat password:</td>
-            <td><input type="password" size="20" name="password2"></td>
-        </tr>
-        <tr>
-            <td colspan="2"><center><input type="submit" name="submitRegister" value="Register"></center></td>
-        </tr>
-    </table>
-</form>
-<?php
-    display_content_end_block();
 }
 
 function display_profile_page($form_action, $error, $info, $user_info) {
