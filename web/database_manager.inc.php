@@ -30,6 +30,16 @@ class SaveFileResult {
     const MIN_VALID_FILE_ID = 1;
 }
 
+class FileStruct {
+    public $name;
+    public $contents;
+    
+    function __construct($name, $contents) {
+        $this->name = $name;
+        $this->contents = $contents;
+    }
+}
+
 class UserInfo {
     public $login;
     public $firstName;
@@ -90,7 +100,7 @@ class DatabaseManager {
     // returns UserCheckResult
     public function checkUserMD5($login, $md5) {
         $login = $this->escapeStr($login);
-        $md5 = $this->escapeStr($md5);
+        $md5   = $this->escapeStr($md5);
         
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '" AND md5 = "' . $md5 . '"')) {
             if ($result->num_rows == 1) {
@@ -122,13 +132,13 @@ class DatabaseManager {
     
     // returns RegistrationResult
     public function registerNewUser($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $ip) {
-        $login = $this->escapeStr($login);
-        $firstName = $this->escapeStr($firstName);
-        $lastName = $this->escapeStr($lastName);
+        $login       = $this->escapeStr($login);
+        $firstName   = $this->escapeStr($firstName);
+        $lastName    = $this->escapeStr($lastName);
         $groupNumber = $this->escapeStr($groupNumber);
-        $email = $this->escapeStr($email);
-        $md5 = $this->escapeStr($md5);
-        $ip = $this->escapeStr($ip);
+        $email       = $this->escapeStr($email);
+        $md5         = $this->escapeStr($md5);
+        $ip          = $this->escapeStr($ip);
         
         //perform checks
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '"')) {
@@ -156,12 +166,12 @@ class DatabaseManager {
     
     // returns UpdateUserResult
     public function updateUserInfo($id, $firstName, $lastName, $groupNumber, $email, $md5) {
-        $id = $this->escapeStr($id);
-        $firstName = $this->escapeStr($firstName);
-        $lastName = $this->escapeStr($lastName);
+        $id          = $this->escapeStr($id);
+        $firstName   = $this->escapeStr($firstName);
+        $lastName    = $this->escapeStr($lastName);
         $groupNumber = $this->escapeStr($groupNumber);
-        $email = $this->escapeStr($email);
-        $md5 = $this->escapeStr($md5);
+        $email       = $this->escapeStr($email);
+        $md5         = $this->escapeStr($md5);
         
         //perform check
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(email) = "' . strtolower($email) . '" AND id != ' . $id)) {
@@ -214,7 +224,7 @@ class DatabaseManager {
 
     // returns true or false
     public function addNewTask($name, $description, $taskFileId, $envFileId) {
-        $name = $this->escapeStr($name);
+        $name        = $this->escapeStr($name);
         $description = $this->escapeStr($description);
         
         $q_p1 = "";
@@ -251,6 +261,23 @@ ORDER BY 1';
                 array_push($ans, $row);
             }
             return $ans;
+        } else {
+            return false;
+        }
+    }
+
+    // returns FileStruct or false
+    public function getFile($id, $md5) {
+        $id = $this->escapeStr($id);
+        $md5 = $this->escapeStr($md5);
+        
+        if ($result = $this->query('SELECT name, data FROM files WHERE id = ' . $id . ' AND data_md5 = "' . $md5 . '"')) {
+            if ($result->num_rows == 1) {
+                $row = $result->fetch_assoc();
+                return new FileStruct($row['name'], $row['data']);
+            } else {
+                return false;
+            }
         } else {
             return false;
         }

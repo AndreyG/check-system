@@ -1,28 +1,19 @@
-<html>
-<head>
-<link rel="stylesheet" href="style.css" type="text/css" />
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<title>Check System Web Client</title>
-</head>
-<body>
-
-<h1 align=center>Check System Web Client</h1>
-
-<div id="wrap">
-
 <?php
     require_once('tabs/fatal_error_tab.inc.php');
     require_once('tabs/authorization_tab.inc.php');
     require_once('tabs/registration_tab.inc.php');
     require_once('tabs/profile_tab.inc.php');
     require_once('tabs/logout_tab.inc.php');
-    
+
     require_once('tabs/teacher/new_task_tab.inc.php');
     require_once('tabs/teacher/all_tasks_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
+    require_once('style.inc.php');
     require_once('settings.inc.php');
+
+    $showPage = true;  // show html page or not
 
     $selfLink = htmlspecialchars($_SERVER['PHP_SELF']);
 
@@ -41,22 +32,22 @@
 
         session_start();
         session_regenerate_id(true);
-        
+
         $authorizationTab = new AuthorizationTab($selfLink, $dbm);
         $registrationTab = new RegistrationTab($selfLink, $dbm);
-        
+
         $page = "";
         if (isset($_GET['page'])) {
             $page = htmlentities($_GET['page']);
         }
-        
+
         $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
-        
+
         // if registration form submitted
         if ($registrationTab->isSubmitted()) {
             $page = $registrationTab->getTabInfo()->page;
             $registrationTab->handleSubmit();
-        
+
         // if login form submitted
         } else if ($authorizationTab->isSubmitted()) {
             $authorizationTab->handleSubmit();
@@ -76,10 +67,22 @@
         if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
             $dbm->updateUserLastIP($user_id, getClientIP());
 
-            if ($page === "logout") {
+            if ($page === "download_file" && isset($_GET['id']) && isset($_GET['md5'])) {
+                if ($fileStruct = $dbm->getFile($_GET['id'], $_GET['md5'])) {
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    header('Content-type: ' . $finfo->buffer($fileStruct->contents));
+                    header('Content-Disposition: attachment; filename="' . $fileStruct->name . '"');
+                    echo $fileStruct->contents;
+                } else {
+                    echo "No such file in database (or database query error might have happened)";
+                }
+                $showPage = false;  // don't show html page
+
+            } else if ($page === "logout") {
                 $_SESSION['user'] = "";
                 $_SESSION['md5'] = "";
                 $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
+
             } else {
 
                 $user_info = $dbm->getUserInfo($user_id);
@@ -109,14 +112,10 @@
                         $newTaskTab->handleSubmit();
                     }
 
-                    $tabHolder->displayByPage($page);
-
                 // if a student is logged in
                 } else {
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($logoutTab);
-
-                    $tabHolder->displayByPage($page);
                 }
 
             }
@@ -126,15 +125,14 @@
         if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
             $tabHolder->addTab($authorizationTab);
             $tabHolder->addTab($registrationTab);
-
-            $tabHolder->displayByPage($page);
         }
-        
+
+        if ($showPage) {
+            html_page_start();
+            $tabHolder->displayByPage($page);
+            html_page_end();
+        }
+
         $dbm->close();
     }
 ?>
-
-</div>
-
-</body>
-</html>

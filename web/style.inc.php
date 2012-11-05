@@ -5,6 +5,31 @@ function getClientIP() {
     return $client_ip;
 }
 
+function html_page_start() {
+?>
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Check System Web Client</title>
+</head>
+<body>
+
+<h1 align=center>Check System Web Client</h1>
+
+<div id="wrap">
+<?php
+}
+
+function html_page_end() {
+?>
+</div>
+
+</body>
+</html>
+<?php
+}
+
 // $activeTab - ref to current tab; $tabs - array of tabs
 function displayTabs(AbstractTab &$activeTab, $tabs) {
     $tabsCount = count($tabs);

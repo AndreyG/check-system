@@ -33,8 +33,8 @@ class AllTasksTab extends AbstractTab {
     <tr>
         <td><?php echo $task[1]; ?></td>
         <td><pre><?php echo $task[2]; ?></pre></td>
-        <td><?php echo ($task[6] != -1) ? ("<a href=\"?download_file_id=" . $task[3] . "&md5=" . $task[7]  . "\">" . $task[5]) . "</a>" : "-"; ?></td>
-        <td><?php echo ($task[9] != -1) ? ("<a href=\"?download_file_id=" . $task[4] . "&md5=" . $task[10] . "\">" . $task[8]) . "</a>" : "-"; ?></td>
+        <td><?php echo ($task[6] != -1) ? ("<a href=\"?page=download_file&id=" . $task[3] . "&md5=" . $task[7]  . "\" target=_blank>" . $task[5]) . "</a>" : "-"; ?></td>
+        <td><?php echo ($task[9] != -1) ? ("<a href=\"?page=download_file&id=" . $task[4] . "&md5=" . $task[10] . "\" target=_blank>" . $task[8]) . "</a>" : "-"; ?></td>
         <td>-</td>
     </tr>
 <?php
