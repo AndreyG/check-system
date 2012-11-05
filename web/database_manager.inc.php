@@ -244,18 +244,9 @@ class DatabaseManager {
 
         return ($this->query('INSERT INTO tasks (name, description' . $q_p1 . $q_p2 . ') VALUES ("' . $name . '", "' . $description . '"' . $q_p3 . $q_p4 . ')'));
     }
-    
-    const SQL_SELECT_ALL_TASKS = 'SELECT tasks.*, task_f.name, task_f.size, task_f.data_md5, env_f.name, env_f.size, env_f.data_md5 FROM tasks, files as task_f, files as env_f WHERE tasks.task_file_id = task_f.id AND tasks.env_file_id = env_f.id
-UNION
-SELECT tasks.*, files.name, files.size, files.data_md5, "-", -1, NULL FROM tasks, files WHERE tasks.task_file_id = files.id AND tasks.env_file_id IS NULL
-UNION
-SELECT tasks.*, "-", -1, NULL, files.name, files.size, files.data_md5 FROM tasks, files WHERE tasks.task_file_id IS NULL AND tasks.env_file_id = files.id
-UNION
-SELECT tasks.*, "-", -1, NULL, "-", -1, NULL FROM tasks WHERE tasks.task_file_id IS NULL AND tasks.env_file_id IS NULL
-ORDER BY 1';
 
     public function getAllTasks() {
-        if ($result = $this->query($this::SQL_SELECT_ALL_TASKS)) {
+        if ($result = $this->query('SELECT tasks.*, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5 FROM tasks LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id ORDER BY tasks.id')) {
             $ans = array();
             while ($row = $result->fetch_array(MYSQLI_NUM)) {
                 array_push($ans, $row);
