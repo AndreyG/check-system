@@ -54,7 +54,7 @@
         
         // if registration form submitted
         if ($registrationTab->isSubmitted()) {
-            $page = "register";
+            $page = $registrationTab->getTabInfo()->page;
             $registrationTab->handleSubmit();
         
         // if login form submitted
@@ -89,7 +89,7 @@
 
                 // if update profile form submitted
                 if ($profileTab->isSubmitted()) {
-                    $page = "profile";
+                    $page = $profileTab->getTabInfo()->page;
                     $profileTab->handleSubmit();
                 }
 
@@ -105,36 +105,18 @@
 
                     // if new task form submitted
                     if ($newTaskTab->isSubmitted()) {
-                        $page = "new_task";
+                        $page = $newTaskTab->getTabInfo()->page;
                         $newTaskTab->handleSubmit();
                     }
 
-                    if ($page === "all_tasks") {
-                        $tabHolder->display($allTasksTab);
-                    } else if ($page === "new_task") {
-                        $tabHolder->display($newTaskTab);
-                    } else if ($page === "profile") {
-                        $tabHolder->display($profileTab);
-                    } else {
-                        // TEMPORARILY
-                        $tabHolder->display($profileTab);
-                    }
+                    $tabHolder->displayByPage($page);
 
                 // if a student is logged in
                 } else {
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($logoutTab);
 
-                    if ($page === "submit") {
-                        //display_tabs("Submit", Tabs::$STUDENT);
-                    } else if ($page === "profile") {
-                        $tabHolder->display($profileTab);
-                    } else {
-                        //display_tabs("Tasks", Tabs::$STUDENT);
-                        
-                        // TEMPORARILY
-                        $tabHolder->display($profileTab);
-                    }
+                    $tabHolder->displayByPage($page);
                 }
 
             }
@@ -145,11 +127,7 @@
             $tabHolder->addTab($authorizationTab);
             $tabHolder->addTab($registrationTab);
 
-            if ($page === "register") {
-                $tabHolder->display($registrationTab);
-            } else {
-                $tabHolder->display($authorizationTab);
-            }
+            $tabHolder->displayByPage($page);
         }
         
         $dbm->close();
