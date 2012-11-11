@@ -25,6 +25,7 @@ class AllTasksTab extends AbstractTab {
         <td><b>Task file</b></td>
         <td><b>Student env file</b></td>
         <td><b>Assigned to</b></td>
+        <td></td>
     </tr>
 <?php
         if ($tasks = $this->dbm->getAllTasks()) {
@@ -32,10 +33,11 @@ class AllTasksTab extends AbstractTab {
 ?>
     <tr>
         <td><?php echo $task[1]; ?></td>
-        <td><pre><?php echo $task[2]; ?></pre></td>
+        <td><font size=2><?php echo $task[2]; ?></font></td>
         <td><?php echo ($task[3] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[3] . "&md5=" . $task[7]  . "\" target=_blank>" . $task[5]) . "</a>" : "-"; ?></td>
         <td><?php echo ($task[4] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[4] . "&md5=" . $task[10] . "\" target=_blank>" . $task[8]) . "</a>" : "-"; ?></td>
-        <td>-</td>
+        <td><?php echo $this->dbm->getStudentsCountForTask($task[0]); ?> students</td>
+        <td><a href="?page=edit_task&id=<?php echo $task[0]; ?>">Edit</a></td>
     </tr>
 <?php
             }

@@ -16,7 +16,7 @@ class RegistrationTab extends AbstractTab {
         $this->dbm = $dbm;
         $this->errorInfo = "";
         $this->successInfo = "";
-        $this->userInfo = new UserInfo("", "", "", "", "", "", 0, "");
+        $this->userInfo = new UserInfo("", "", "", 0, "", "", false, "");
     }
 
     public function getTabInfo() {
@@ -42,8 +42,8 @@ class RegistrationTab extends AbstractTab {
             <td><input type="text" size="20" name="lastName" value="<?php echo $this->userInfo->lastName; ?>"></td>
         </tr>
         <tr>
-            <td>Group number:</td>
-            <td><input type="text" size="20" name="groupNumber" value="<?php echo $this->userInfo->groupNumber; ?>"></td>
+            <td>Group:</td>
+            <td><?php displayGroupsSelect($this->dbm, $this->userInfo->groupId); ?></td>
         </tr>
         <tr>
             <td>E-mail:</td>
@@ -65,17 +65,17 @@ class RegistrationTab extends AbstractTab {
 <?php
         display_content_end_block();
     }
-    
+
     public function isSubmitted() {
         return (isset($_POST['submitRegister']) && isset($_POST['login']) && isset($_POST['firstName']) && isset($_POST['lastName']) &&
-                isset($_POST['groupNumber']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2']));
+                isset($_POST['groupId']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2']));
     }
-    
+
     public function handleSubmit() {
         $this->userInfo->login = $_POST['login'];
         $this->userInfo->firstName = $_POST['firstName'];
         $this->userInfo->lastName = $_POST['lastName'];
-        $this->userInfo->groupNumber = $_POST['groupNumber'];
+        $this->userInfo->groupId = $_POST['groupId'];
         $this->userInfo->email = $_POST['email'];
 
         $pwd = $_POST['password'];
@@ -87,15 +87,13 @@ class RegistrationTab extends AbstractTab {
             $this->errorInfo = "Empty first name not allowed";
         } else if ($this->userInfo->lastName === "") {
             $this->errorInfo = "Empty last name not allowed";
-        } else if ($this->userInfo->groupNumber === "") {
-            $this->errorInfo = "Empty group number not allowed";
         } else if ($this->userInfo->email === "") {
             $this->errorInfo = "Empty email not allowed";
         } else if ($pwd === "") {
             $this->errorInfo = "Empty password not allowed";
 
         } else {
-            $regRes = $this->dbm->registerNewUser($this->userInfo->login, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupNumber,
+            $regRes = $this->dbm->registerNewUser($this->userInfo->login, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupId,
                                                   $this->userInfo->email, md5($_POST['password']), false, getClientIP());
             if ($regRes === RegistrationResult::OK) {
                 $this->successInfo = "Registered successfully";
@@ -104,6 +102,8 @@ class RegistrationTab extends AbstractTab {
                 $this->errorInfo = "Such login already registered";
             } else if ($regRes === RegistrationResult::ERR_EMAIL_EXISTS) {
                 $this->errorInfo = "Such email already registered";
+            } else if ($regRes === RegistrationResult::ERR_INVALID_GROUP) {
+                $this->errorInfo = "Hacking attempt? No such group";
             } else if ($regRes === RegistrationResult::ERR_DB_ERROR) {
                 $this->errorInfo = "Database query error";
             }

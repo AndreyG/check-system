@@ -1,16 +1,18 @@
 <?php
 
 class RegistrationResult {
-    const OK               = 0;
-    const ERR_LOGIN_EXISTS = 1;
-    const ERR_EMAIL_EXISTS = 2;
-    const ERR_DB_ERROR     = 3;
+    const OK                = 0;
+    const ERR_LOGIN_EXISTS  = 1;
+    const ERR_EMAIL_EXISTS  = 2;
+    const ERR_INVALID_GROUP = 3;
+    const ERR_DB_ERROR      = 4;
 }
 
 class UpdateUserResult {
-    const OK               = 0;
-    const ERR_EMAIL_EXISTS = 2;
-    const ERR_DB_ERROR     = 3;
+    const OK                = 0;
+    const ERR_EMAIL_EXISTS  = 2;
+    const ERR_INVALID_GROUP = 3;
+    const ERR_DB_ERROR      = 4;
 }
 
 class UserCheckResult {
@@ -44,17 +46,17 @@ class UserInfo {
     public $login;
     public $firstName;
     public $lastName;
-    public $groupNumber;
+    public $groupId;
     public $email;
     public $md5;
     public $isTeacher;
     public $lastIP;
 
-    function __construct($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $lastIP) {
+    function __construct($login, $firstName, $lastName, $groupId, $email, $md5, $isTeacher, $lastIP) {
         $this->login = $login;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
-        $this->groupNumber = $groupNumber;
+        $this->groupId = $groupId;
         $this->email = $email;
         $this->md5 = $md5;
         $this->isTeacher = $isTeacher;
@@ -121,7 +123,7 @@ class DatabaseManager {
         if ($result = $this->query('SELECT * FROM users WHERE id = ' . $id)) {
             if ($result->num_rows == 1) {
                 $row = $result->fetch_assoc();
-                return new UserInfo($row['login'], $row['firstName'], $row['lastName'], $row['groupNumber'], $row['email'], $row['md5'], ($row['isTeacher'] == 1) ? 1 : 0, $row['lastIP']);
+                return new UserInfo($row['login'], $row['firstName'], $row['lastName'], $row['groupId'], $row['email'], $row['md5'], ($row['isTeacher'] == 1) ? true : false, $row['lastIP']);
             } else {
                 return false;
             }
@@ -131,14 +133,14 @@ class DatabaseManager {
     }
     
     // returns RegistrationResult
-    public function registerNewUser($login, $firstName, $lastName, $groupNumber, $email, $md5, $isTeacher, $ip) {
-        $login       = $this->escapeStr($login);
-        $firstName   = $this->escapeStr($firstName);
-        $lastName    = $this->escapeStr($lastName);
-        $groupNumber = $this->escapeStr($groupNumber);
-        $email       = $this->escapeStr($email);
-        $md5         = $this->escapeStr($md5);
-        $ip          = $this->escapeStr($ip);
+    public function registerNewUser($login, $firstName, $lastName, $groupId, $email, $md5, $isTeacher, $ip) {
+        $login     = $this->escapeStr($login);
+        $firstName = $this->escapeStr($firstName);
+        $lastName  = $this->escapeStr($lastName);
+        $groupId   = $this->escapeStr($groupId);
+        $email     = $this->escapeStr($email);
+        $md5       = $this->escapeStr($md5);
+        $ip        = $this->escapeStr($ip);
         
         //perform checks
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '"')) {
@@ -153,10 +155,16 @@ class DatabaseManager {
         } else {
             return RegistrationResult::ERR_DB_ERROR;
         }
-        
+        if ($result = $this->query('SELECT id FROM groups WHERE id = ' . $groupId)) {
+            if ($result->num_rows != 1)
+                return RegistrationResult::ERR_INVALID_GROUP;
+        } else {
+            return RegistrationResult::ERR_DB_ERROR;
+        }
+
         //insert to database
-        if ($this->query('INSERT INTO users (login, firstName, lastName, groupNumber, email, md5, isTeacher, lastIP) VALUES ("' .
-                                    $login . '", "' . $firstName . '", "' . $lastName . '", "' . $groupNumber . '", "'. $email .'", "' . $md5 .
+        if ($this->query('INSERT INTO users (login, firstName, lastName, groupId, email, md5, isTeacher, lastIP) VALUES ("' .
+                                    $login . '", "' . $firstName . '", "' . $lastName . '", "' . $groupId . '", "'. $email .'", "' . $md5 .
                                     '", ' . (($isTeacher === true) ? '1' : '0') . ', "' . $ip . '")') == true) {
             return RegistrationResult::OK;
         } else {
@@ -165,25 +173,33 @@ class DatabaseManager {
     }
     
     // returns UpdateUserResult
-    public function updateUserInfo($id, $firstName, $lastName, $groupNumber, $email, $md5) {
-        $id          = $this->escapeStr($id);
-        $firstName   = $this->escapeStr($firstName);
-        $lastName    = $this->escapeStr($lastName);
-        $groupNumber = $this->escapeStr($groupNumber);
-        $email       = $this->escapeStr($email);
-        $md5         = $this->escapeStr($md5);
+    public function updateUserInfo($id, $firstName, $lastName, $groupId, $email, $md5, $isTeacher) {
+        $id        = $this->escapeStr($id);
+        $firstName = $this->escapeStr($firstName);
+        $lastName  = $this->escapeStr($lastName);
+        $groupId   = $this->escapeStr($groupId);
+        $email     = $this->escapeStr($email);
+        $md5       = $this->escapeStr($md5);
         
-        //perform check
+        //perform checks
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(email) = "' . strtolower($email) . '" AND id != ' . $id)) {
             if ($result->num_rows > 0)
                 return UpdateUserResult::ERR_EMAIL_EXISTS;
         } else {
             return UpdateUserResult::ERR_DB_ERROR;
         }
+        if (!$isTeacher) {
+            if ($result = $this->query('SELECT id FROM groups WHERE id = ' . $groupId)) {
+                if ($result->num_rows != 1)
+                    return UpdateUserResult::ERR_INVALID_GROUP;
+            } else {
+                return UpdateUserResult::ERR_DB_ERROR;
+            }
+        }
         
         //update in database
-        if ($this->query('UPDATE users SET firstName = "' . $firstName . '", lastName = "' . $lastName . '", groupNumber = "' . $groupNumber .
-                              '", email = "' . $email . '", md5 = "' . $md5 . '" WHERE id = ' . $id) == true) {
+        if ($this->query('UPDATE users SET firstName = "' . $firstName . '", lastName = "' . $lastName . '", groupId = "' . $groupId .
+                         '", email = "' . $email . '", md5 = "' . $md5 . '", isTeacher = "' . (($isTeacher === true) ? '1' : '0') . '" WHERE id = ' . $id) == true) {
             return UpdateUserResult::OK;
         } else {
             return UpdateUserResult::ERR_DB_ERROR;
@@ -269,6 +285,71 @@ class DatabaseManager {
             } else {
                 return false;
             }
+        } else {
+            return false;
+        }
+    }
+    
+    // returns count or false
+    public function getStudentsCountForTask($taskId) {
+        $taskId = $this->escapeStr($taskId);
+
+        if ($result = $this->query('SELECT COUNT(*) FROM student_tasks WHERE task_id = ' . $taskId)) {
+            if ($result->num_rows == 1) {
+                $row = $result->fetch_array(MYSQLI_NUM);
+                return $row[0];
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    
+    public function getAllStudents($groupId = -1) {
+        $groupCond = "";
+        if ($groupId !== -1) {
+            $groupCond = " AND groupId = " . $this->escapeStr($groupId);
+        }
+
+        if ($result = $this->query('SELECT users.id, users.firstName, users.lastName, groups.name FROM users LEFT OUTER JOIN groups ON groups.id = users.groupId WHERE users.isTeacher = 0' . $groupCond)) {
+            $ans = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($ans, $row);
+            }
+            return $ans;
+        } else {
+            return false;
+        }
+    }
+
+    public function getAllTasksFor($studentId) {
+        $studentId = $this->escapeStr($studentId);
+
+        if ($result = $this->query('SELECT st.task_id, st.solved, tasks.name FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id WHERE st.student_id = ' . $studentId)) {
+            $ans = array();
+            while ($row = $result->fetch_array(MYSQLI_NUM)) {
+                array_push($ans, $row);
+            }
+            return $ans;
+        } else {
+            return false;
+        }
+    }
+    
+    public function addGroup($groupName) {
+        $groupName = $this->escapeStr($groupName);
+        
+        return ($this->query('INSERT INTO groups (name) VALUES ("' . $groupName . '")'));
+    }
+    
+    public function getAllGroups() {
+        if ($result = $this->query('SELECT id, name FROM groups')) {
+            $ans = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($ans, $row);
+            }
+            return $ans;
         } else {
             return false;
         }

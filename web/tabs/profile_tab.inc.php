@@ -52,8 +52,8 @@ class ProfileTab extends AbstractTab {
         if (!$this->userInfo->isTeacher) {
 ?>
         <tr>
-            <td>Group number:</td>
-            <td><input type="text" size="20" name="groupNumber" value="<?php echo $this->userInfo->groupNumber; ?>"></td>
+            <td>Group:</td>
+            <td><?php displayGroupsSelect($this->dbm, $this->userInfo->groupId); ?></td>
         </tr>
 <?php
         }
@@ -85,14 +85,14 @@ class ProfileTab extends AbstractTab {
 
     public function isSubmitted() {
         return (isset($_POST['submitUpdateProfile']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email']) &&
-                isset($_POST['newPassword']) && isset($_POST['newPassword2']) && isset($_POST['password']) && ($this->userInfo->isTeacher || isset($_POST['groupNumber'])));
+                isset($_POST['newPassword']) && isset($_POST['newPassword2']) && isset($_POST['password']) && ($this->userInfo->isTeacher || isset($_POST['groupId'])));
     }
 
     public function handleSubmit() {
         $this->userInfo->firstName = $_POST['firstName'];
         $this->userInfo->lastName = $_POST['lastName'];
         if (!$this->userInfo->isTeacher)
-            $this->userInfo->groupNumber = $_POST['groupNumber'];
+            $this->userInfo->groupId = $_POST['groupId'];
         $this->userInfo->email = $_POST['email'];
 
         if (md5($_POST['password']) !== $this->userInfo->md5) {
@@ -103,20 +103,20 @@ class ProfileTab extends AbstractTab {
             $this->errorInfo = "Empty first name not allowed";
         } else if ($_POST['lastName'] === "") {
             $this->errorInfo = "Empty last name not allowed";
-        } else if (!$this->userInfo->isTeacher && $_POST['groupNumber'] === "") {
-            $this->errorInfo = "Empty group number not allowed";
         } else if ($_POST['email'] === "") {
             $this->errorInfo = "Empty email not allowed";
 
         } else {
-            $updRes = $this->dbm->updateUserInfo($this->userId, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupNumber,
-                                            $this->userInfo->email, ($_POST['newPassword'] != "") ? md5($_POST['newPassword']) : $this->userInfo->md5);
+            $updRes = $this->dbm->updateUserInfo($this->userId, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupId,
+                              $this->userInfo->email, ($_POST['newPassword'] != "") ? md5($_POST['newPassword']) : $this->userInfo->md5, $this->userInfo->isTeacher);
             if ($updRes === UpdateUserResult::OK) {
                 $this->successInfo = "Profile updated successfully";
                 $this->userInfo = $this->dbm->getUserInfo($this->userId);
                 $_SESSION['md5'] = $this->userInfo->md5;
             } else if ($updRes === UpdateUserResult::ERR_EMAIL_EXISTS) {
                 $this->errorInfo = "Such email already registered";
+            } else if ($updRes === UpdateUserResult::ERR_INVALID_GROUP) {
+                $this->errorInfo = "Hacking attempt? No such group";
             } else if ($updRes === UpdateUserResult::ERR_DB_ERROR) {
                 $this->errorInfo = "Database query error";
             }

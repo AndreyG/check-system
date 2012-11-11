@@ -78,4 +78,16 @@ function display_error_or_info_if_any($error, $info) {
     }
 }
 
+function displayGroupsSelect(DatabaseManager &$dbm, $selectedGroupId = -1) {
+    if ($groups = $dbm->getAllGroups()) {
+        echo '<select name="groupId">';
+        foreach ($groups as $group) {
+            echo '<option ' . (($selectedGroupId == $group['id']) ? 'selected ' : '') . 'value="' . $group['id'] . '">' . $group['name'] . '</option>';
+        }
+        echo '</select>';
+    } else {
+        echo '<p><b><font color=#cc0000>Fatal error: could not make groups select object</font></b></p>';
+    }
+}
+
 ?>

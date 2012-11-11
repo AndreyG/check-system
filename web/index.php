@@ -7,6 +7,8 @@
 
     require_once('tabs/teacher/new_task_tab.inc.php');
     require_once('tabs/teacher/all_tasks_tab.inc.php');
+    require_once('tabs/teacher/all_students_tab.inc.php');
+    require_once('tabs/teacher/groups_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
@@ -99,10 +101,14 @@
                 // if a teacher is logged in
                 if ($user_info->isTeacher) {
                     $allTasksTab = new AllTasksTab($dbm);
+                    $allStudentsTab = new AllStudentsTab($dbm);
                     $newTaskTab = new NewTaskTab($selfLink, $dbm);
+                    $groupsTab = new GroupsTab($selfLink, $dbm);
                     
                     $tabHolder->addTab($allTasksTab);
+                    $tabHolder->addTab($allStudentsTab);
                     $tabHolder->addTab($newTaskTab);
+                    $tabHolder->addTab($groupsTab);
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($logoutTab);
 
@@ -110,6 +116,12 @@
                     if ($newTaskTab->isSubmitted()) {
                         $page = $newTaskTab->getTabInfo()->page;
                         $newTaskTab->handleSubmit();
+                    }
+                    
+                    // if new group form submitted
+                    if ($groupsTab->isSubmitted()) {
+                        $page = $groupsTab->getTabInfo()->page;
+                        $groupsTab->handleSubmit();
                     }
 
                 // if a student is logged in
