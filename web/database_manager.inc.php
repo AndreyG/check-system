@@ -269,7 +269,6 @@ class DatabaseManager {
             $q_p3 = ', ' . $this->escapeStr($taskFileId);
         }
         if ($envFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
-            $envFileId = $this->escapeStr($envFileId);
             $q_p2 = ', env_file_id';
             $q_p4 = ', ' . $this->escapeStr($envFileId);
         }
@@ -280,6 +279,30 @@ class DatabaseManager {
 
         $this->updateTaskGroups($taskId, $groupIds);
         $this->updateTaskStudents($taskId, $studentIds);
+
+        return true;
+    }
+
+    public function updateTask($id, $name, $description, $taskFileId, $envFileId, $groupIds, $studentIds) {
+        $id          = $this->escapeStr($id);
+        $name        = $this->escapeStr($name);
+        $description = $this->escapeStr($description);
+
+        $q_p1 = "";
+        $q_p2 = "";
+
+        if ($taskFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
+            $q_p1 = ', task_file_id = ' . $this->escapeStr($taskFileId);
+        }
+        if ($envFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
+            $q_p2 = ', env_file_id = '. $this->escapeStr($envFileId);
+        }
+
+        if (!$this->query('UPDATE tasks SET name = "' . $name . '", description = "' . $description . '"' . $q_p1 . $q_p2 . ' WHERE id = ' . $id))
+            return false;
+
+        $this->updateTaskGroups($id, $groupIds);
+        $this->updateTaskStudents($id, $studentIds);
 
         return true;
     }

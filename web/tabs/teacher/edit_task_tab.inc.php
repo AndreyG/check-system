@@ -18,13 +18,17 @@ class EditTaskTab extends AbstractTab {
         $this->dbm = $dbm;
         $this->successInfo = "";
         $this->taskId = $taskId;
-        $this->taskDataArray = $this->dbm->getTask($taskId);
+        $this->getTaskDataFromDB();
+    }
+
+    private function getTaskDataFromDB() {
+        $this->taskDataArray = $this->dbm->getTask($this->taskId);
         $this->assArray = array(array(), array());
         if (!$this->taskDataArray) {
             $this->errorInfo = "Could not get task data";
         } else {
             $this->errorInfo = "";
-            $ass = $this->dbm->getAllAssignmentsForTask($taskId);
+            $ass = $this->dbm->getAllAssignmentsForTask($this->taskId);
             foreach ($ass as $as) {
                 array_push($this->assArray[$as[2]], $as[0]);
             }
@@ -40,7 +44,7 @@ class EditTaskTab extends AbstractTab {
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
         if ($this->taskDataArray) {
 ?>
-<form method="post" action="<?php echo $this->formAction; ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo $this->formAction . '?' . $this->getTabInfo()->page; ?>" enctype="multipart/form-data">
     <table>
         <tr>
             <td>Task name:</td>
@@ -79,10 +83,14 @@ class EditTaskTab extends AbstractTab {
     }
 
     public function isSubmitted() {
+        return $this->isSubmitted_static();
+    }
+
+    public static function isSubmitted_static() {
         return (isset($_POST['submitEditTask']) && isset($_POST['name']) && isset($_POST['description']) && isset($_FILES['taskFile']) && isset($_FILES['envFile']));
     }
 
-    // TODO: GET RID OF THIS COPY OF FUNCTION FROM new_task_tab.php
+    // TODO: this is a copy of function from 'new_task_tab.php'; get rid of it
     private function saveFileOrSetErrorInfo($fileFieldName, $fileDescription) {
         $file_id = SaveFileResult::ERR_NO_FILE;
         if ($this->errorInfo === "" && $_FILES[$fileFieldName]['error'] != UPLOAD_ERR_NO_FILE) {
@@ -96,27 +104,32 @@ class EditTaskTab extends AbstractTab {
         return $file_id;
     }
 
+    private function saveSubmitValues() {
+        $this->taskDataArray[1] = $_POST['name'];
+        $this->taskDataArray[2] = $_POST['description'];
+        $this->assArray[1] = getPostArray('groupIds');
+        $this->assArray[0] = getPostArray('studentIds');
+    }
+
     public function handleSubmit() {
-        if ($_POST['name'] == "") {
+        if ($_POST['name'] === "") {
             $this->errorInfo = "Task name can't be empty";
+            $this->saveSubmitValues();
         } else {
-            //TODO: write update task code
-            /*
             $task_file_id = $this->saveFileOrSetErrorInfo('taskFile', 'task file');
             $env_file_id = $this->saveFileOrSetErrorInfo('envFile', 'student environment file');  //TODO: if error happens here, delete task file from db
 
             // if still no error
             if ($this->errorInfo == "") {
-                if ($this->dbm->addNewTask($_POST['name'], $_POST['description'], $task_file_id, $env_file_id, $_POST['groupIds'], $_POST['studentIds'])) {
-                    $this->successInfo = "Task added successfully";
+                if ($this->dbm->updateTask($this->taskId, $_POST['name'], $_POST['description'], $task_file_id, $env_file_id, getPostArray('groupIds'), getPostArray('studentIds'))) {
+                    $this->successInfo = "Task edited successfully";
+                    $this->getTaskDataFromDB();
                 } else {
                     $this->errorInfo = "Database query error while adding task";
                 }
             } else {
-                $this->oldNameValue = $_POST['name'];
-                $this->oldDescriptionValue = $_POST['description'];
+                $this->saveSubmitValues();
             }
-            */
         }
     }
 }

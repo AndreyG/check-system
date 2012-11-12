@@ -11,6 +11,7 @@ class NewTaskTab extends AbstractTab {
     private $successInfo;
     private $oldNameValue;
     private $oldDescriptionValue;
+    private $assArray;
 
     function __construct($formAction, DatabaseManager &$dbm) {
         $this->formAction = $formAction;
@@ -19,6 +20,7 @@ class NewTaskTab extends AbstractTab {
         $this->successInfo = "";
         $this->oldNameValue = "";
         $this->oldDescriptionValue = "";
+        $this->assArray = array(array(), array());
     }
 
     public function getTabInfo() {
@@ -49,11 +51,11 @@ class NewTaskTab extends AbstractTab {
         </tr>
         <tr>
             <td>Assign to groups:</td>
-            <td><?php displayGroupsMultiSelect($this->dbm); ?></td>
+            <td><?php displayGroupsMultiSelect($this->dbm, $this->assArray[1]); ?></td>
         </tr>
         <tr>
             <td>Assign to students:</td>
-            <td><?php displayStudentsMultiSelect($this->dbm); ?></td>
+            <td><?php displayStudentsMultiSelect($this->dbm, $this->assArray[0]); ?></td>
         </tr>
         <tr>
             <td colspan="2"><center><input type="submit" name="submitNewTask" value="Add"></center></td>
@@ -81,23 +83,30 @@ class NewTaskTab extends AbstractTab {
         return $file_id;
     }
 
+    private function saveSubmitValues() {
+        $this->oldNameValue = $_POST['name'];
+        $this->oldDescriptionValue = $_POST['description'];
+        $this->assArray[1] = getPostArray('groupIds');
+        $this->assArray[0] = getPostArray('studentIds');
+    }
+
     public function handleSubmit() {
         if ($_POST['name'] == "") {
             $this->errorInfo = "Task name can't be empty";
+            $this->saveSubmitValues();
         } else {
             $task_file_id = $this->saveFileOrSetErrorInfo('taskFile', 'task file');
             $env_file_id = $this->saveFileOrSetErrorInfo('envFile', 'student environment file');  //TODO: if error happens here, delete task file from db
 
             // if still no error
             if ($this->errorInfo == "") {
-                if ($this->dbm->addNewTask($_POST['name'], $_POST['description'], $task_file_id, $env_file_id, $_POST['groupIds'], $_POST['studentIds'])) {
+                if ($this->dbm->addNewTask($_POST['name'], $_POST['description'], $task_file_id, $env_file_id, getPostArray('groupIds'), getPostArray('studentIds'))) {
                     $this->successInfo = "Task added successfully";
                 } else {
                     $this->errorInfo = "Database query error while adding task";
                 }
             } else {
-                $this->oldNameValue = $_POST['name'];
-                $this->oldDescriptionValue = $_POST['description'];
+                $this->saveSubmitValues();
             }
         }
     }

@@ -129,4 +129,8 @@ function displayStudentsMultiSelect(DatabaseManager &$dbm, $selectedStudents = a
     }
 }
 
+function getPostArray($arrayName) {
+    return empty($_POST[$arrayName]) ? array() : $_POST[$arrayName];
+}
+
 ?>

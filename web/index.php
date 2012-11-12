@@ -108,14 +108,17 @@
                     
                     $tabHolder->addTab($allTasksTab);
                     $tabHolder->addTab($allStudentsTab);
-                    $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($groupsTab);
+                    $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($profileTab);
 
-                    if ($page === "edit_task" && isset($_GET['id'])) {
+                    if (($page === "edit_task" && isset($_GET['id'])) || EditTaskTab::isSubmitted_static()) {
                         $editTaskTab = new EditTaskTab($selfLink, $dbm, htmlentities($_GET['id']));
                         $page = $editTaskTab->getTabInfo()->page;
                         $tabHolder->addTab($editTaskTab);
+
+                        if ($editTaskTab->isSubmitted())
+                            $editTaskTab->handleSubmit();
                     }
 
                     $tabHolder->addTab($logoutTab);
