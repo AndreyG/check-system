@@ -9,6 +9,7 @@
     require_once('tabs/teacher/all_tasks_tab.inc.php');
     require_once('tabs/teacher/all_students_tab.inc.php');
     require_once('tabs/teacher/groups_tab.inc.php');
+    require_once('tabs/teacher/edit_task_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
@@ -110,6 +111,13 @@
                     $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($groupsTab);
                     $tabHolder->addTab($profileTab);
+
+                    if ($page === "edit_task" && isset($_GET['id'])) {
+                        $editTaskTab = new EditTaskTab($selfLink, $dbm, htmlentities($_GET['id']));
+                        $page = $editTaskTab->getTabInfo()->page;
+                        $tabHolder->addTab($editTaskTab);
+                    }
+
                     $tabHolder->addTab($logoutTab);
 
                     // if new task form submitted
@@ -117,7 +125,7 @@
                         $page = $newTaskTab->getTabInfo()->page;
                         $newTaskTab->handleSubmit();
                     }
-                    
+
                     // if new group form submitted
                     if ($groupsTab->isSubmitted()) {
                         $page = $groupsTab->getTabInfo()->page;

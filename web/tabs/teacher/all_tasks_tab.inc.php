@@ -63,11 +63,11 @@ class AllTasksTab extends AbstractTab {
 <?php
         display_content_end_block();
     }
-    
+
     public function isSubmitted() {
         false;
     }
-    
+
     public function handleSubmit() {
     }
 }

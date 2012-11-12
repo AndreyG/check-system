@@ -296,6 +296,16 @@ class DatabaseManager {
         }
     }
 
+    public function getTask($taskId) {
+        $taskId = $this->escapeStr($taskId);
+
+        if ($result = $this->query('SELECT tasks.*, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5 FROM tasks LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE tasks.id = ' . $taskId)) {
+            return (($result->num_rows == 1) ? $result->fetch_array(MYSQLI_NUM) : false);
+        } else {
+            return false;
+        }
+    }
+
     // returns FileStruct or false
     public function getFile($id, $md5) {
         $id = $this->escapeStr($id);
@@ -362,7 +372,7 @@ class DatabaseManager {
 
     public function getAllAssignmentsForTask($taskId) {
         $taskId = $this->escapeStr($taskId);
-        
+
         if ($result = $this->query('SELECT groups.id, groups.name, 1 FROM groups INNER JOIN group_tasks AS gt ON groups.id = gt.group_id WHERE gt.task_id = ' . $taskId .
                             ' UNION SELECT users.id, CONCAT(users.firstName, " ", users.lastName), 0 FROM users INNER JOIN student_tasks AS st ON users.id = st.student_id WHERE st.task_id = ' . $taskId)) {
             $ans = array();
