@@ -90,4 +90,43 @@ function displayGroupsSelect(DatabaseManager &$dbm, $selectedGroupId = -1) {
     }
 }
 
+function displayGroupsMultiSelect(DatabaseManager &$dbm, $selectedGroups = array()) {
+    if ($groups = $dbm->getAllGroups()) {
+        /*
+        echo '<select size=7 multiple name="groupIds[]">';
+        foreach ($groups as $group) {
+            echo '<option ' . (in_array($group['id'], $selectedGroups) ? 'selected ' : '') . 'value="' . $group['id'] . '">' . $group['name'] . '</option>';
+        }
+        echo '</select> (hold Ctrl to use multiselection)';
+        */
+
+        foreach ($groups as $group) {
+            echo '<input type="checkbox" name="groupIds[]" value="' . $group['id'] . '"' . (in_array($group['id'], $selectedGroups) ? ' checked' : '') .
+                 '>' . $group['name'] . '</input><br />';
+        }
+    } else {
+        echo '<p><b><font color=#cc0000>Fatal error: could not make groups multiselect object</font></b></p>';
+    }
+}
+
+function displayStudentsMultiSelect(DatabaseManager &$dbm, $selectedStudents = array()) {
+    if ($students = $dbm->getAllStudents()) {
+        /*
+        echo '<select size=11 multiple name="studentIds[]">';
+        foreach ($students as $student) {
+            echo '<option ' . (in_array($student['id'], $selectedStudents) ? 'selected ' : '') . 'value="' . $student['id'] . '">' .
+                     $student['firstName'] . ' ' . $student['lastName'] . ' [' . $student['name'] . ']</option>';
+        }
+        echo '</select> (hold Ctrl to use multiselection)';
+        */
+
+        foreach ($students as $student) {
+            echo '<input type="checkbox" name="studentIds[]" value="' . $student['id'] . '"' . (in_array($student['id'], $selectedStudents) ? ' checked' : '') .
+                 '>' . $student['firstName'] . ' ' . $student['lastName'] . ' [' . $student['name'] . ']</input><br />';
+        }
+    } else {
+        echo '<p><b><font color=#cc0000>Fatal error: could not make students multiselect object</font></b></p>';
+    }
+}
+
 ?>

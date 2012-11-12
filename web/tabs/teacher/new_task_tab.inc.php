@@ -48,6 +48,14 @@ class NewTaskTab extends AbstractTab {
             <td><input type="file" name="envFile" /> (optional)</td>
         </tr>
         <tr>
+            <td>Assign to groups:</td>
+            <td><?php displayGroupsMultiSelect($this->dbm); ?></td>
+        </tr>
+        <tr>
+            <td>Assign to students:</td>
+            <td><?php displayStudentsMultiSelect($this->dbm); ?></td>
+        </tr>
+        <tr>
             <td colspan="2"><center><input type="submit" name="submitNewTask" value="Add"></center></td>
         </tr>
     </table>
@@ -55,11 +63,11 @@ class NewTaskTab extends AbstractTab {
 <?php
         display_content_end_block();
     }
-    
+
     public function isSubmitted() {
         return (isset($_POST['submitNewTask']) && isset($_POST['name']) && isset($_POST['description']) && isset($_FILES['taskFile']) && isset($_FILES['envFile']));
     }
-    
+
     private function saveFileOrSetErrorInfo($fileFieldName, $fileDescription) {
         $file_id = SaveFileResult::ERR_NO_FILE;
         if ($this->errorInfo === "" && $_FILES[$fileFieldName]['error'] != UPLOAD_ERR_NO_FILE) {
@@ -72,7 +80,7 @@ class NewTaskTab extends AbstractTab {
         }
         return $file_id;
     }
-    
+
     public function handleSubmit() {
         if ($_POST['name'] == "") {
             $this->errorInfo = "Task name can't be empty";
@@ -82,7 +90,7 @@ class NewTaskTab extends AbstractTab {
 
             // if still no error
             if ($this->errorInfo == "") {
-                if ($this->dbm->addNewTask($_POST['name'], $_POST['description'], $task_file_id, $env_file_id)) {
+                if ($this->dbm->addNewTask($_POST['name'], $_POST['description'], $task_file_id, $env_file_id, $_POST['groupIds'], $_POST['studentIds'])) {
                     $this->successInfo = "Task added successfully";
                 } else {
                     $this->errorInfo = "Database query error while adding task";

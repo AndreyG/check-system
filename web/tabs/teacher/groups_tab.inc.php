@@ -29,6 +29,7 @@ class GroupsTab extends AbstractTab {
     <tr>
         <td><b>Group name</b></td>
         <td><b>Students</b></td>
+        <td><b>Assigned tasks</b></td>
     </tr>
 <?php
         if ($groups = $this->dbm->getAllGroups()) {
@@ -38,10 +39,16 @@ class GroupsTab extends AbstractTab {
                 foreach ($students as $student) {
                     $strStudents .= '<a href="?page=edit_student&id=' . $student['id'] . '">' . $student['firstName'] . ' ' . $student['lastName'] . '</a>; ';
                 }
+                $tasks = $this->dbm->getAllTasksForGroup($group['id']);
+                $strTasks = "";
+                foreach ($tasks as $task) {
+                    $strTasks .= '<a href="?page=edit_task&id=' . $task['task_id'] . '">' . $task['name'] . '</a>; ';
+                }
 ?>
     <tr>
         <td><?php echo $group['name'] ?></td>
         <td><font size=2><?php echo substr($strStudents, 0, -2); ?></font></td>
+        <td><font size=2><?php echo substr($strTasks, 0, -2); ?></font></td>
     </tr>
 <?php
             }

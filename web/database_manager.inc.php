@@ -237,17 +237,33 @@ class DatabaseManager {
             return SaveFileResult::ERR_DB_ERROR;
         }
     }
+    
+    private function updateTaskGroups($taskId, $groupIds) {
+        $this->query('DELETE FROM group_tasks WHERE task_id = ' . $taskId);
+        foreach ($groupIds as $groupId) {
+            $groupId = $this->escapeStr($groupId);
+            $this->query('INSERT INTO group_tasks (group_id, task_id) VALUES (' . $groupId . ', ' . $taskId . ') ');
+        }
+    }
+    
+    private function updateTaskStudents($taskId, $studentIds) {
+        $this->query('DELETE FROM student_tasks WHERE task_id = ' . $taskId);
+        foreach ($studentIds as $studentId) {
+            $studentId = $this->escapeStr($studentId);
+            $this->query('INSERT INTO student_tasks (student_id, task_id) VALUES (' . $studentId . ', ' . $taskId . ') ');
+        }
+    }
 
     // returns true or false
-    public function addNewTask($name, $description, $taskFileId, $envFileId) {
+    public function addNewTask($name, $description, $taskFileId, $envFileId, $groupIds, $studentIds) {
         $name        = $this->escapeStr($name);
         $description = $this->escapeStr($description);
-        
+
         $q_p1 = "";
         $q_p2 = "";
         $q_p3 = "";
         $q_p4 = "";
-        
+
         if ($taskFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
             $q_p1 = ', task_file_id';
             $q_p3 = ', ' . $this->escapeStr($taskFileId);
@@ -258,7 +274,14 @@ class DatabaseManager {
             $q_p4 = ', ' . $this->escapeStr($envFileId);
         }
 
-        return ($this->query('INSERT INTO tasks (name, description' . $q_p1 . $q_p2 . ') VALUES ("' . $name . '", "' . $description . '"' . $q_p3 . $q_p4 . ')'));
+        if (!$this->query('INSERT INTO tasks (name, description' . $q_p1 . $q_p2 . ') VALUES ("' . $name . '", "' . $description . '"' . $q_p3 . $q_p4 . ')'))
+            return false;
+        $taskId = $this->mysqli->insert_id;
+
+        $this->updateTaskGroups($taskId, $groupIds);
+        $this->updateTaskStudents($taskId, $studentIds);
+
+        return true;
     }
 
     public function getAllTasks() {
@@ -290,29 +313,13 @@ class DatabaseManager {
         }
     }
     
-    // returns count or false
-    public function getStudentsCountForTask($taskId) {
-        $taskId = $this->escapeStr($taskId);
-
-        if ($result = $this->query('SELECT COUNT(*) FROM student_tasks WHERE task_id = ' . $taskId)) {
-            if ($result->num_rows == 1) {
-                $row = $result->fetch_array(MYSQLI_NUM);
-                return $row[0];
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    
     public function getAllStudents($groupId = -1) {
         $groupCond = "";
         if ($groupId !== -1) {
             $groupCond = " AND groupId = " . $this->escapeStr($groupId);
         }
 
-        if ($result = $this->query('SELECT users.id, users.firstName, users.lastName, groups.name FROM users LEFT OUTER JOIN groups ON groups.id = users.groupId WHERE users.isTeacher = 0' . $groupCond)) {
+        if ($result = $this->query('SELECT users.id, users.firstName, users.lastName, groups.name FROM users LEFT OUTER JOIN groups ON groups.id = users.groupId WHERE users.isTeacher = 0' . $groupCond . ' ORDER BY users.groupId')) {
             $ans = array();
             while ($row = $result->fetch_assoc()) {
                 array_push($ans, $row);
@@ -323,10 +330,26 @@ class DatabaseManager {
         }
     }
 
-    public function getAllTasksFor($studentId) {
+    public function getAllTasksForGroup($groupId) {
+        $groupId = $this->escapeStr($groupId);
+
+        if ($result = $this->query('SELECT gt.task_id, tasks.name FROM group_tasks AS gt INNER JOIN tasks ON tasks.id = gt.task_id WHERE gt.group_id = ' . $groupId)) {
+            $ans = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($ans, $row);
+            }
+            return $ans;
+        } else {
+            return false;
+        }
+    }
+
+    public function getAllTasksForStudent($studentId) {
         $studentId = $this->escapeStr($studentId);
 
-        if ($result = $this->query('SELECT st.task_id, st.solved, tasks.name FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id WHERE st.student_id = ' . $studentId)) {
+        if ($result = $this->query('SELECT st.task_id, tasks.name, 0 FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id WHERE st.student_id = ' . $studentId .
+                            ' UNION SELECT gt.task_id, tasks.name, 1 FROM users INNER JOIN group_tasks AS gt ON users.groupId = gt.group_id INNER JOIN tasks ON tasks.id = gt.task_id WHERE users.id = ' . $studentId .
+                            ' ORDER BY 1')) {
             $ans = array();
             while ($row = $result->fetch_array(MYSQLI_NUM)) {
                 array_push($ans, $row);
@@ -336,13 +359,28 @@ class DatabaseManager {
             return false;
         }
     }
-    
+
+    public function getAllAssignmentsForTask($taskId) {
+        $taskId = $this->escapeStr($taskId);
+        
+        if ($result = $this->query('SELECT groups.id, groups.name, 1 FROM groups INNER JOIN group_tasks AS gt ON groups.id = gt.group_id WHERE gt.task_id = ' . $taskId .
+                            ' UNION SELECT users.id, CONCAT(users.firstName, " ", users.lastName), 0 FROM users INNER JOIN student_tasks AS st ON users.id = st.student_id WHERE st.task_id = ' . $taskId)) {
+            $ans = array();
+            while ($row = $result->fetch_array(MYSQLI_NUM)) {
+                array_push($ans, $row);
+            }
+            return $ans;
+        } else {
+            return false;
+        }
+    }
+
     public function addGroup($groupName) {
         $groupName = $this->escapeStr($groupName);
         
         return ($this->query('INSERT INTO groups (name) VALUES ("' . $groupName . '")'));
     }
-    
+
     public function getAllGroups() {
         if ($result = $this->query('SELECT id, name FROM groups')) {
             $ans = array();

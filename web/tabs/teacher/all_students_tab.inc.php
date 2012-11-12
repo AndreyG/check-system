@@ -22,24 +22,22 @@ class AllStudentsTab extends AbstractTab {
     <tr>
         <td><b>Name</b></td>
         <td><b>Group</b></td>
-        <td><b>Unsolved tasks</b></td>
-        <td><b>Solved tasks</b></td>
+        <td><b>Assigned tasks</b><br /><font size=2>g - by group, s - by student</font></td>
         <td></td>
     </tr>
 <?php
         if ($students = $this->dbm->getAllStudents()) {
             foreach ($students as $student) {
-                $sTasks = $this->dbm->getAllTasksFor($student['id']);
-                $strTasks = array("", "");  // unsolved / solved
-                foreach ($sTasks as $sTask) {
-                    $strTasks[$sTask[1]] .= '<a href="?page=edit_task&id=' . $sTask[0] . '">' . $sTask[2] . '</a>; ';
+                $tasks = $this->dbm->getAllTasksForStudent($student['id']);
+                $strTasks = "";
+                foreach ($tasks as $task) {
+                    $strTasks .= '<a href="?page=edit_task&id=' . $task[0] . '">' . $task[1] . '</a> ' . (($task[2] == 1) ? '(g)' : '(s)') . '; ';
                 }
 ?>
     <tr>
         <td><?php echo $student['firstName'] . ' ' . $student['lastName']; ?></td>
         <td><?php echo ($student['name'] != NULL) ? $student['name'] : "<i>&lt;not set&gt;</i>"; ?></td>
-        <td><font size=2><?php echo substr($strTasks[0], 0, -2); ?></font></td>
-        <td><font size=2><?php echo substr($strTasks[1], 0, -2); ?></font></td>
+        <td><font size=2><?php echo substr($strTasks, 0, -2); ?></font></td>
         <td><a href="?page=edit_student&id=<?php echo $student['id']; ?>">Edit</a></td>
     </tr>
 <?php

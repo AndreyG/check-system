@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 12, 2012 at 12:13 AM
+-- Generation Time: Nov 12, 2012 at 03:01 PM
 -- Server version: 5.1.61-log
 -- PHP Version: 5.3.10-pl0-gentoo
 
@@ -46,14 +46,20 @@ CREATE TABLE IF NOT EXISTS `groups` (
   `name` varchar(30) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `groups`
+-- Table structure for table `group_tasks`
 --
 
-INSERT INTO `groups` (`id`, `name`) VALUES
-(1, 'year2009');
+CREATE TABLE IF NOT EXISTS `group_tasks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
+  `task_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
