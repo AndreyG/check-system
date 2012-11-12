@@ -5,6 +5,8 @@
     require_once('tabs/profile_tab.inc.php');
     require_once('tabs/logout_tab.inc.php');
 
+    require_once('tabs/student/tasks_tab.inc.php');
+
     require_once('tabs/teacher/new_task_tab.inc.php');
     require_once('tabs/teacher/all_tasks_tab.inc.php');
     require_once('tabs/teacher/all_students_tab.inc.php');
@@ -144,6 +146,9 @@
 
                 // if a student is logged in
                 } else {
+                    $tasksTab = new TasksTab($dbm, $user_id);
+
+                    $tabHolder->addTab($tasksTab);
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($logoutTab);
                 }

@@ -380,8 +380,8 @@ class DatabaseManager {
     public function getAllTasksForStudent($studentId) {
         $studentId = $this->escapeStr($studentId);
 
-        if ($result = $this->query('SELECT st.task_id, tasks.name, 0 FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id WHERE st.student_id = ' . $studentId .
-                            ' UNION SELECT gt.task_id, tasks.name, 1 FROM users INNER JOIN group_tasks AS gt ON users.groupId = gt.group_id INNER JOIN tasks ON tasks.id = gt.task_id WHERE users.id = ' . $studentId .
+        if ($result = $this->query('SELECT st.task_id, tasks.name, tasks.description, tasks.task_file_id, tasks.env_file_id, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5, 0 FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE st.student_id = ' . $studentId .
+                            ' UNION SELECT gt.task_id, tasks.name, tasks.description, tasks.task_file_id, tasks.env_file_id, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5, 1 FROM users INNER JOIN group_tasks AS gt ON users.groupId = gt.group_id INNER JOIN tasks ON tasks.id = gt.task_id LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE users.id = ' . $studentId .
                             ' ORDER BY 1')) {
             $ans = array();
             while ($row = $result->fetch_array(MYSQLI_NUM)) {
