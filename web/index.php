@@ -10,6 +10,7 @@
     require_once('tabs/teacher/all_students_tab.inc.php');
     require_once('tabs/teacher/groups_tab.inc.php');
     require_once('tabs/teacher/edit_task_tab.inc.php');
+    require_once('tabs/teacher/edit_student_tab.inc.php');
 
     require_once('tab_holder.inc.php');
     require_once('database_manager.inc.php');
@@ -119,6 +120,12 @@
 
                         if ($editTaskTab->isSubmitted())
                             $editTaskTab->handleSubmit();
+                    }
+
+                    if ($page === "edit_student" && isset($_GET['id'])) {
+                        $editStudentTab = new EditStudentTab(htmlentities($_GET['id']));
+                        $page = $editStudentTab->getTabInfo()->page;
+                        $tabHolder->addTab($editStudentTab);
                     }
 
                     $tabHolder->addTab($logoutTab);
