@@ -33,7 +33,10 @@
         $fatalErrorTab = new FatalErrorTab("<p><b><font color=#cc0000>Failed to connect to MySQL: (" . $connError[0] . ") " . $connError[1] . "</font></b></p>");
 
         $tabHolder->addTab($fatalErrorTab);
+
+        html_page_start();
         $tabHolder->display($fatalErrorTab);
+        html_page_end();
     } else {
 
         session_start();
