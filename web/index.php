@@ -146,7 +146,7 @@
 
                 // if a student is logged in
                 } else {
-                    $tasksTab = new TasksTab($dbm, $user_id);
+                    $tasksTab = new TasksTab($selfLink, $dbm, $user_id);
 
                     $tabHolder->addTab($tasksTab);
                     $tabHolder->addTab($profileTab);
