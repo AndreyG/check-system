@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 14, 2012 at 02:34 PM
+-- Generation Time: Nov 14, 2012 at 04:12 PM
 -- Server version: 5.1.61-log
 -- PHP Version: 5.3.10-pl0-gentoo
 
@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS `group_tasks` (
 
 CREATE TABLE IF NOT EXISTS `repo_operations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL DEFAULT '0',
+  `req_user_id` int(11) NOT NULL DEFAULT '0',
+  `for_user_id` int(11) NOT NULL DEFAULT '0',
   `command` text NOT NULL,
   `param1` text,
   `param2` text,
@@ -126,6 +127,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `md5` varchar(32) NOT NULL,
   `isTeacher` int(11) NOT NULL DEFAULT '0',
   `lastIP` varchar(30) NOT NULL,
+  `git` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `login` (`login`),
   UNIQUE KEY `email` (`email`)

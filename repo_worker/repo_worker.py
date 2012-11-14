@@ -55,6 +55,8 @@ def init():
     else:
         os.chdir(WORK_DIR + "/" + GITOLITE_ADMIN_REPONAME)
         subprocess.call(["git", "reset", "--hard"])  # we don't need any local changes
+        subprocess.call(["git", "fetch"])
+        subprocess.call(["git", "pull", "-r", "origin", "master"])
 
     configRepo()
     
@@ -84,10 +86,10 @@ def update():
     global db
     global cursor
     
-    cursor.execute("SELECT id, command, param1, param2, param3, param4, param5 FROM repo_operations WHERE done = 0 ORDER BY id")
+    cursor.execute("SELECT id, command, for_user_id, param1, param2, param3, param4, param5 FROM repo_operations WHERE done = 0 ORDER BY id")
     result = cursor.fetchall()
     for row in result:
-        id, command, param1, param2, param3, param4, param5 = row
+        id, command, for_user_id, param1, param2, param3, param4, param5 = row
 
         if command == "createrepo":
             opMsg = "create repo for %s" % param1
@@ -103,6 +105,7 @@ def update():
                     subprocess.call(["git", "add", pubkeyFilename])
                     subprocess.call(["git", "commit", "-am", "Create repo for user [%s] and put his public key" % param1])
                     subprocess.call(["git", "push", "origin", "master"])
+                    cursor.execute("UPDATE users SET git = \"%s\" WHERE id = %d" % (repoAddress(param1), for_user_id))
                     setOperationCompleted(id, opMsg)
                 except:
                     setOperationFailed(id, opMsg)
@@ -114,10 +117,13 @@ def update():
             pubkeyFilename = "keydir/%s.pub" % param1
             if os.path.isfile(pubkeyFilename):
                 try:
-                    with open(pubkeyFilename, "w") as pubkey:
-                        pubkey.write(param2)
-                    subprocess.call(["git", "commit", "-am", "New public key for user [%s]" % param1])
-                    subprocess.call(["git", "push", "origin", "master"])
+                    with open(pubkeyFilename, "r") as pubkey:
+                        oldPubkey = pubkey.read()
+                    if oldPubkey != param2:
+                        with open(pubkeyFilename, "w") as pubkey:
+                            pubkey.write(param2)
+                        subprocess.call(["git", "commit", "-am", "New public key for user [%s]" % param1])
+                        subprocess.call(["git", "push", "origin", "master"])
                     setOperationCompleted(id, opMsg)
                 except:
                     setOperationFailed(id, opMsg)

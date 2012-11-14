@@ -141,9 +141,33 @@ class DatabaseManager {
             return false;
         }
     }
-    
+
+    public function newRepoOperation($reqUserId, $forUserId, $operation, $params = array()) {
+        $reqUserId = $this->escapeStr($reqUserId);
+        $forUserId = $this->escapeStr($forUserId);
+        $operation = $this->escapeStr($operation);
+
+        $q_p1 = "";
+        $q_p2 = "";
+        $i = 1;
+        foreach ($params as $param) {
+            $q_p1 .= ', param' . $i;
+            $q_p2 .= ', "' . $this->escapeStr($param) . '"';
+            ++$i;
+        }
+
+        if (!$this->query('INSERT INTO repo_operations (req_user_id, for_user_id, command' . $q_p1 .
+                                               ') VALUES (' . $reqUserId . ', ' . $forUserId . ', "' . $operation . '"' . $q_p2 . ')')) {
+            return false;
+        }
+        
+        //TODO: connect to TCP_PORT of repo_worker and send 'update'
+        
+        return true;
+    }
+
     // returns RegistrationResult
-    public function registerNewUser($login, $firstName, $lastName, $groupId, $email, $md5, $isTeacher, $ip) {
+    public function registerNewUser($login, $firstName, $lastName, $groupId, $email, $md5, $isTeacher, $ip, $publicKey) {
         $login     = $this->escapeStr($login);
         $firstName = $this->escapeStr($firstName);
         $lastName  = $this->escapeStr($lastName);
@@ -179,12 +203,14 @@ class DatabaseManager {
         if ($this->query('INSERT INTO users (login, firstName, lastName, groupId, email, md5, isTeacher, lastIP) VALUES ("' .
                                     $login . '", "' . $firstName . '", "' . $lastName . '", "' . $groupId . '", "'. $email .'", "' . $md5 .
                                     '", ' . (($isTeacher === true) ? '1' : '0') . ', "' . $ip . '")') == true) {
+            
+            $this->newRepoOperation($this->mysqli->insert_id, $this->mysqli->insert_id, 'createrepo', array('u' . $this->mysqli->insert_id, $publicKey));
             return RegistrationResult::OK;
         } else {
             return RegistrationResult::ERR_DB_ERROR;
         }
     }
-    
+
     // returns UpdateUserResult
     public function updateUserInfo($id, $firstName, $lastName, $groupId, $email, $md5, $isTeacher) {
         $id        = $this->escapeStr($id);
@@ -453,6 +479,23 @@ class DatabaseManager {
         $userId = $this->escapeStr($userId);
         
         return $this->query('UPDATE users SET isTeacher = 1 WHERE isTeacher = 0 AND id = ' . $userId);
+    }
+
+    public function getOperations($userId = 0) {
+        $q_p1 = "";
+        if ($userId !== 0) {
+            $userId = $this->escapeStr($userId);
+            $q_p1 = " WHERE ro.req_user_id = " . $userId . " OR ro.for_user_id = " . $userId;
+        }
+        if ($result = $this->query('SELECT ro.req_user_id, ro.for_user_id, ro.command, ro.done, ro.repo_worker_message FROM repo_operations AS ro' . $q_p1 . ' ORDER BY ro.id DESC')) {
+            $ans = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($ans, $row);
+            }
+            return $ans;
+        } else {
+            return false;
+        }
     }
 
     public function close() {

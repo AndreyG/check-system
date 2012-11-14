@@ -11,8 +11,9 @@ class ProfileTab extends AbstractTab {
     private $successInfo;
     private $userId;
     private $userInfo;
+    private $publicKey;
 
-    function __construct($formAction, DatabaseManager &$dbm, $userId, UserInfo $userInfo) {
+    function __construct($formAction, DatabaseManager &$dbm, $userId, UserInfo $userInfo, $gitolite_admin_repo_path) {
         $this->formAction = $formAction;
         $this->dbm = $dbm;
         $this->errorInfo = "";
@@ -20,6 +21,8 @@ class ProfileTab extends AbstractTab {
         $this->userId = $userId;
         //$this->userInfo = $this->dbm->getUserInfo($this->userId);
         $this->userInfo = $userInfo;
+        $pubkeyFilename = $gitolite_admin_repo_path . "/keydir/u" . $userId . ".pub";
+        $this->publicKey = file_exists($pubkeyFilename) ? file_get_contents($pubkeyFilename) : "{could not load public key, but still may be able to update it}";
     }
 
     public function getTabInfo() {
@@ -75,6 +78,10 @@ class ProfileTab extends AbstractTab {
             <td><input type="password" size="20" name="password"> (required for updating profile)</td>
         </tr>
         <tr>
+            <td>Public key for Git:</td>
+            <td><textarea name="publickey" cols="50" rows="10"><?php echo isset($_POST['publickey']) ? $_POST['publickey'] : $this->publicKey; ?></textarea> (won't update immediately)</td>
+        </tr>
+        <tr>
             <td colspan="2"><center><input type="submit" name="submitUpdateProfile" value="Update profile"></center></td>
         </tr>
     </table>
@@ -113,6 +120,15 @@ class ProfileTab extends AbstractTab {
                 $this->successInfo = "Profile updated successfully";
                 $this->userInfo = $this->dbm->getUserInfo($this->userId);
                 $_SESSION['md5'] = $this->userInfo->md5;
+
+                if ($_POST['publickey'] !== $this->publicKey) {
+                    if ($this->dbm->newRepoOperation($this->userId, $this->userId, 'newpubkey', array('u' . $this->userId, $_POST['publickey']))) {
+                        $this->successInfo .= ", public key queued for update";
+                    } else {
+                        $this->errorInfo = "Could not queue public key for update";
+                    }
+                }
+
             } else if ($updRes === UpdateUserResult::ERR_EMAIL_EXISTS) {
                 $this->errorInfo = "Such email already registered";
             } else if ($updRes === UpdateUserResult::ERR_INVALID_GROUP) {

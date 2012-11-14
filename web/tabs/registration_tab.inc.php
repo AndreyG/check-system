@@ -11,6 +11,7 @@ class RegistrationTab extends AbstractTab {
     private $successInfo;
     private $userInfo;
     private $regAvaliable;
+    private $publicKey;
 
     function __construct($formAction, DatabaseManager &$dbm) {
         $this->formAction = $formAction;
@@ -23,6 +24,7 @@ class RegistrationTab extends AbstractTab {
             $this->errorInfo = "Registration unavaliable! No groups in database.";
             $this->successInfo = "Default admin should authorize and create groups.<br />Default admin's login and password are equal to login and password to database. See: <i>settings.inc.php</i>.";
         }
+        $this->publicKey = "";
     }
 
     public function getTabInfo() {
@@ -65,6 +67,10 @@ class RegistrationTab extends AbstractTab {
             <td><input type="password" size="20" name="password2"></td>
         </tr>
         <tr>
+            <td>Public key for Git:</td>
+            <td><textarea name="publickey" cols="50" rows="10"><?php echo $this->publicKey; ?></textarea></td>
+        </tr>
+        <tr>
             <td colspan="2"><center><input type="submit" name="submitRegister" value="Register"></center></td>
         </tr>
     </table>
@@ -79,7 +85,7 @@ class RegistrationTab extends AbstractTab {
             return false;
 
         return (isset($_POST['submitRegister']) && isset($_POST['login']) && isset($_POST['firstName']) && isset($_POST['lastName']) &&
-                isset($_POST['groupId']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2']));
+                isset($_POST['groupId']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2']) && isset($_POST['publickey']));
     }
 
     public function handleSubmit() {
@@ -91,6 +97,7 @@ class RegistrationTab extends AbstractTab {
         $this->userInfo->lastName = $_POST['lastName'];
         $this->userInfo->groupId = $_POST['groupId'];
         $this->userInfo->email = $_POST['email'];
+        $this->publicKey = $_POST['publickey'];
 
         $pwd = $_POST['password'];
         if ($pwd !== $_POST['password2']) {
@@ -108,10 +115,11 @@ class RegistrationTab extends AbstractTab {
 
         } else {
             $regRes = $this->dbm->registerNewUser($this->userInfo->login, $this->userInfo->firstName, $this->userInfo->lastName, $this->userInfo->groupId,
-                                                  $this->userInfo->email, md5($_POST['password']), false, getClientIP());
+                                                  $this->userInfo->email, md5($_POST['password']), false, getClientIP(), $this->publicKey);
             if ($regRes === RegistrationResult::OK) {
                 $this->successInfo = "Registered successfully";
                 $this->userInfo = new UserInfo("", "", "", "", "", "", 0, "");
+                $this->publicKey = "";
             } else if ($regRes === RegistrationResult::ERR_LOGIN_EXISTS) {
                 $this->errorInfo = "Such login already registered";
             } else if ($regRes === RegistrationResult::ERR_EMAIL_EXISTS) {
