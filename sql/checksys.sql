@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 12, 2012 at 03:01 PM
+-- Generation Time: Nov 14, 2012 at 02:34 PM
 -- Server version: 5.1.61-log
 -- PHP Version: 5.3.10-pl0-gentoo
 
@@ -58,6 +58,26 @@ CREATE TABLE IF NOT EXISTS `group_tasks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `group_id` int(11) NOT NULL,
   `task_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `repo_operations`
+--
+
+CREATE TABLE IF NOT EXISTS `repo_operations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL DEFAULT '0',
+  `command` text NOT NULL,
+  `param1` text,
+  `param2` text,
+  `param3` text,
+  `param4` text,
+  `param5` text,
+  `done` int(11) NOT NULL DEFAULT '0',
+  `repo_worker_message` text,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
