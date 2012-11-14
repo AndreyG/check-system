@@ -1,5 +1,6 @@
 <?php
     require_once('tabs/fatal_error_tab.inc.php');
+    require_once('tabs/make_teacher_tab.inc.php');
     require_once('tabs/authorization_tab.inc.php');
     require_once('tabs/registration_tab.inc.php');
     require_once('tabs/profile_tab.inc.php');
@@ -65,15 +66,36 @@
         // if session data is set
         } else if (isset($_SESSION['user']) && isset($_SESSION['md5']) && $_SESSION['user'] !== "" && $_SESSION['md5'] !== "") {
             $user_id = $dbm->checkUserMD5($_SESSION['user'], $_SESSION['md5']);
-            if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
+            if ($user_id < UserCheckResult::MIN_VALID_USER_ID && $user_id !== UserCheckResult::DEFAULT_ADMIN) {
                 $_SESSION['user'] = "";
                 $_SESSION['md5'] = "";
             }
         }
 
+        // if default admin logged in
+        if ($user_id === UserCheckResult::DEFAULT_ADMIN) {
+            if ($page === "logout") {
+                $_SESSION['user'] = "";
+                $_SESSION['md5'] = "";
+                $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
+            } else {
+                $groupsTab = new GroupsTab($selfLink, $dbm);
+                $makeTeacherTab = new MakeTeacherTab($dbm);
+                $logoutTab = new LogoutTab();
+                
+                // if new group form submitted
+                if ($groupsTab->isSubmitted()) {
+                    $page = $groupsTab->getTabInfo()->page;
+                    $groupsTab->handleSubmit();
+                }
+            
+                $tabHolder->addTab($groupsTab);
+                $tabHolder->addTab($makeTeacherTab);
+                $tabHolder->addTab($logoutTab);
+            }
 
         // if valid user logged in
-        if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
+        } else if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
             $dbm->updateUserLastIP($user_id, getClientIP());
 
             if ($page === "download_file" && isset($_GET['id']) && isset($_GET['md5'])) {
@@ -133,8 +155,6 @@
                         $tabHolder->addTab($editStudentTab);
                     }
 
-                    $tabHolder->addTab($logoutTab);
-
                     // if new task form submitted
                     if ($newTaskTab->isSubmitted()) {
                         $page = $newTaskTab->getTabInfo()->page;
@@ -153,14 +173,14 @@
 
                     $tabHolder->addTab($tasksTab);
                     $tabHolder->addTab($profileTab);
-                    $tabHolder->addTab($logoutTab);
                 }
 
+                $tabHolder->addTab($logoutTab);
             }
         }
 
         // if not logged in
-        if ($user_id < UserCheckResult::MIN_VALID_USER_ID) {
+        if ($user_id < UserCheckResult::MIN_VALID_USER_ID && $user_id !== UserCheckResult::DEFAULT_ADMIN) {
             $tabHolder->addTab($authorizationTab);
             $tabHolder->addTab($registrationTab);
         }

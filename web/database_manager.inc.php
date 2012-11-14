@@ -16,10 +16,11 @@ class UpdateUserResult {
 }
 
 class UserCheckResult {
+    const DEFAULT_ADMIN      = -100;  // see 'settings.inc.php' for details
     const DB_ERROR           = -2;
     const USER_NOT_LOGGED_IN = -1;
     const USER_INVALID       = 0;
-    //positive result is user id in database
+    // positive result is user id in database
     const MIN_VALID_USER_ID  = 1;
 }
 
@@ -28,7 +29,7 @@ class SaveFileResult {
     const ERR_DB_ERROR      = -2;
     const ERR_FILE_TOO_BIG  = -1;
     const ERR_UPLOAD_ERROR  = 0;
-    //positive result is file id in database
+    // positive result is file id in database
     const MIN_VALID_FILE_ID = 1;
 }
 
@@ -69,6 +70,9 @@ class DatabaseManager {
 
     private $mysqli;
     private $connError;
+    
+    private $db_user;
+    private $db_passwd_md5;
 
     function __construct($maxUploadFileSize) {
         $this->maxUploadFileSize = $maxUploadFileSize;
@@ -87,6 +91,9 @@ class DatabaseManager {
 
     // returns true or false
     public function connect($db_server, $db_user, $db_passwd, $db_name) {
+        $this->db_user = $db_user;
+        $this->db_passwd_md5 = md5($db_passwd);
+
         $this->mysqli = new mysqli($db_server, $db_user, $db_passwd, $db_name);
         if ($this->mysqli->connect_errno) {
             $this->connError = array($this->mysqli->connect_errno, $this->mysqli->connect_error);
@@ -103,7 +110,10 @@ class DatabaseManager {
     public function checkUserMD5($login, $md5) {
         $login = $this->escapeStr($login);
         $md5   = $this->escapeStr($md5);
-        
+
+        if ($login === $this->db_user && $md5 === $this->db_passwd_md5)
+            return UserCheckResult::DEFAULT_ADMIN;
+
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '" AND md5 = "' . $md5 . '"')) {
             if ($result->num_rows == 1) {
                 $row = $result->fetch_assoc();
@@ -141,7 +151,10 @@ class DatabaseManager {
         $email     = $this->escapeStr($email);
         $md5       = $this->escapeStr($md5);
         $ip        = $this->escapeStr($ip);
-        
+
+        if ($login === $this->db_user)
+            return RegistrationResult::ERR_LOGIN_EXISTS;
+
         //perform checks
         if ($result = $this->query('SELECT id FROM users WHERE LOWER(login) = "' . strtolower($login) . '"')) {
             if ($result->num_rows > 0)
@@ -411,7 +424,7 @@ class DatabaseManager {
     public function addGroup($groupName) {
         $groupName = $this->escapeStr($groupName);
         
-        return ($this->query('INSERT INTO groups (name) VALUES ("' . $groupName . '")'));
+        return $this->query('INSERT INTO groups (name) VALUES ("' . $groupName . '")');
     }
 
     public function getAllGroups() {
@@ -424,6 +437,22 @@ class DatabaseManager {
         } else {
             return false;
         }
+    }
+
+    // returns true if table 'groups' is not empty
+    public function checkIfGroupsExist() {
+        if ($result = $this->query('SELECT COUNT(*) FROM groups')) {
+            $row = $result->fetch_array(MYSQLI_NUM);
+            return ($row[0] > 0);
+        } else {
+            return false;
+        }
+    }
+
+    public function makeTeacher($userId) {
+        $userId = $this->escapeStr($userId);
+        
+        return $this->query('UPDATE users SET isTeacher = 1 WHERE isTeacher = 0 AND id = ' . $userId);
     }
 
     public function close() {

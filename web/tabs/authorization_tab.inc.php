@@ -52,7 +52,7 @@ class AuthorizationTab extends AbstractTab {
         $user = $_POST['login'];
         $md5 = md5($_POST['password']);
         $this->userId = $this->dbm->checkUserMD5($user, $md5);
-        if ($this->userId >= UserCheckResult::MIN_VALID_USER_ID) {
+        if ($this->userId >= UserCheckResult::MIN_VALID_USER_ID || $this->userId === UserCheckResult::DEFAULT_ADMIN) {
             $_SESSION['user'] = $user;
             $_SESSION['md5'] = $md5;
         } else if ($this->userId == UserCheckResult::USER_INVALID) {

@@ -10,6 +10,7 @@ class RegistrationTab extends AbstractTab {
     private $errorInfo;
     private $successInfo;
     private $userInfo;
+    private $regAvaliable;
 
     function __construct($formAction, DatabaseManager &$dbm) {
         $this->formAction = $formAction;
@@ -17,6 +18,11 @@ class RegistrationTab extends AbstractTab {
         $this->errorInfo = "";
         $this->successInfo = "";
         $this->userInfo = new UserInfo("", "", "", 0, "", "", false, "");
+        $this->regAvaliable = $this->dbm->checkIfGroupsExist();
+        if (!$this->regAvaliable) {
+            $this->errorInfo = "Registration unavaliable! No groups in database.";
+            $this->successInfo = "Default admin should authorize and create groups.<br />Default admin's login and password are equal to login and password to database. See: <i>settings.inc.php</i>.";
+        }
     }
 
     public function getTabInfo() {
@@ -26,6 +32,7 @@ class RegistrationTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
+        if ($this->regAvaliable) {
 ?>
 <form method="post" action="<?php echo $this->formAction; ?>">
     <table>
@@ -63,15 +70,22 @@ class RegistrationTab extends AbstractTab {
     </table>
 </form>
 <?php
+        }
         display_content_end_block();
     }
 
     public function isSubmitted() {
+        if (!$this->regAvaliable)
+            return false;
+
         return (isset($_POST['submitRegister']) && isset($_POST['login']) && isset($_POST['firstName']) && isset($_POST['lastName']) &&
                 isset($_POST['groupId']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['password2']));
     }
 
     public function handleSubmit() {
+        if (!$this->regAvaliable)
+            return;
+
         $this->userInfo->login = $_POST['login'];
         $this->userInfo->firstName = $_POST['firstName'];
         $this->userInfo->lastName = $_POST['lastName'];
