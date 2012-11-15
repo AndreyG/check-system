@@ -125,7 +125,7 @@ function displayStudentsMultiSelect(DatabaseManager &$dbm, $selectedStudents = a
                  '>' . $student['firstName'] . ' ' . $student['lastName'] . ' [' . $student['name'] . ']</input><br />';
         }
     } else {
-        echo '<p><b><font color=#cc0000>Fatal error: could not make students multiselect object</font></b></p>';
+        echo '<p><b><font color=#cc0000>Could not make students multiselect object</font></b></p>';
     }
 }
 

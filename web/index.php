@@ -4,7 +4,7 @@
     require_once('tabs/authorization_tab.inc.php');
     require_once('tabs/registration_tab.inc.php');
     require_once('tabs/profile_tab.inc.php');
-    require_once('tabs/repo_operations_tab.inc.php');
+    require_once('tabs/repo_tab.inc.php');
     require_once('tabs/logout_tab.inc.php');
 
     require_once('tabs/student/tasks_tab.inc.php');
@@ -119,7 +119,7 @@
                 $user_info = $dbm->getUserInfo($user_id);
 
                 $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info, $gitolite_admin_repo_path);
-                $repoOperationsTab = new RepoOperationsTab($dbm, $user_info->isTeacher ? 0 : $user_id);
+                $repoTab = new RepoTab($dbm, $user_info->isTeacher ? 0 : $user_id);
                 $logoutTab = new LogoutTab();
 
                 // if update profile form submitted
@@ -140,7 +140,7 @@
                     $tabHolder->addTab($groupsTab);
                     $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($profileTab);
-                    $tabHolder->addTab($repoOperationsTab);
+                    $tabHolder->addTab($repoTab);
 
                     if (($page === "edit_task" && isset($_GET['id'])) || EditTaskTab::isSubmitted_static()) {
                         $editTaskTab = new EditTaskTab($selfLink, $dbm, htmlentities($_GET['id']));
@@ -169,7 +169,7 @@
 
                     $tabHolder->addTab($tasksTab);
                     $tabHolder->addTab($profileTab);
-                    $tabHolder->addTab($repoOperationsTab);
+                    $tabHolder->addTab($repoTab);
                 }
 
                 $tabHolder->addTab($logoutTab);

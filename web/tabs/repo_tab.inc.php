@@ -4,7 +4,7 @@ require_once('tabs/abstract_tab.inc.php');
 require_once('style.inc.php');
 require_once('database_manager.inc.php');
 
-class RepoOperationsTab extends AbstractTab {
+class RepoTab extends AbstractTab {
     private $dbm;
     private $userId;
 
@@ -14,7 +14,7 @@ class RepoOperationsTab extends AbstractTab {
     }
 
     public function getTabInfo() {
-        return new TabInfo("Repo op-s", "repo_operations");
+        return new TabInfo("Repo", "repo");
     }
 
     private function displayStatusText($status) {
@@ -30,7 +30,10 @@ class RepoOperationsTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
 ?>
-<p><b>Repository operations</b></p>
+<p><b>Information</b></p>
+<p>Your repository: <i><?php echo htmlentities($this->dbm->getGitAddress($this->userId)); ?></i></p>
+<br />
+<p><b>Operations</b></p>
 <table id="infoTable">
     <tr>
         <th>Requested by</th>

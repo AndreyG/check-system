@@ -516,6 +516,23 @@ class DatabaseManager {
         }
     }
 
+    public function getGitAddress($userId = 0) {
+        if ($userId !== 0) {
+            $userId = $this->escapeStr($userId);
+            if ($result = $this->query('SELECT git FROM users WHERE id = ' . $userId)) {
+                if ($result->num_rows == 1) {
+                    $row = $result->fetch_assoc();
+                    return $row['git'];
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        return "git@<host>:tasks.git";
+    }
+
     public function close() {
         $this->mysqli->close();
     }
