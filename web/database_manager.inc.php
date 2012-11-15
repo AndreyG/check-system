@@ -73,14 +73,19 @@ class DatabaseManager {
     
     private $db_user;
     private $db_passwd_md5;
+    
+    private $repo_worker_host;
+    private $repo_worker_port;
 
-    function __construct($maxUploadFileSize) {
+    function __construct($maxUploadFileSize, $repo_worker_host, $repo_worker_port) {
         $this->maxUploadFileSize = $maxUploadFileSize;
+        $this->repo_worker_host = $repo_worker_host;
+        $this->repo_worker_port = $repo_worker_port;
     }
 
     private function query($q) {
         if (strlen($q) < 1024) {
-            file_put_contents('sql_queries.log', $q . chr(10), FILE_APPEND);
+            file_put_contents('sql_queries.log', date("Y-m-d H:i:s") . ': ' . $q . chr(10), FILE_APPEND);
         }
         return $this->mysqli->query($q);
     }
@@ -156,13 +161,26 @@ class DatabaseManager {
             ++$i;
         }
 
-        if (!$this->query('INSERT INTO repo_operations (req_user_id, for_user_id, command' . $q_p1 .
-                                               ') VALUES (' . $reqUserId . ', ' . $forUserId . ', "' . $operation . '"' . $q_p2 . ')')) {
+        if (!$this->query('INSERT INTO repo_operations (req_user_id, for_user_id, command' . $q_p1 . ', created' .
+                                               ') VALUES (' . $reqUserId . ', ' . $forUserId . ', "' . $operation . '"' . $q_p2 . ', NOW())')) {
             return false;
         }
-        
-        //TODO: connect to TCP_PORT of repo_worker and send 'update'
-        
+        $roId = $this->mysqli->insert_id;
+
+        $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        if ($socket === false) {
+            file_put_contents('socket_errors.log', date("Y-m-d H:i:s") . ', roId = ' . $roId . ': ' . socket_strerror(socket_last_error()) . chr(10), FILE_APPEND);
+        } else {
+            $result = socket_connect($socket, $this->repo_worker_host, $this->repo_worker_port);
+            if ($result === false) {
+                file_put_contents('socket_errors.log', date("Y-m-d H:i:s") . ', roId = ' . $roId . ': ' . socket_strerror(socket_last_error()) . chr(10), FILE_APPEND);
+            } else {
+                $updatePacket = "update";
+                socket_write($socket, $updatePacket, strlen($updatePacket));
+                socket_close($socket);
+            }
+        }
+
         return true;
     }
 
@@ -487,9 +505,9 @@ class DatabaseManager {
             $userId = $this->escapeStr($userId);
             $q_p1 = " WHERE ro.req_user_id = " . $userId . " OR ro.for_user_id = " . $userId;
         }
-        if ($result = $this->query('SELECT ro.req_user_id, ro.for_user_id, ro.command, ro.done, ro.repo_worker_message FROM repo_operations AS ro' . $q_p1 . ' ORDER BY ro.id DESC')) {
+        if ($result = $this->query('SELECT CONCAT(u1.firstName, " ", u1.lastName), CONCAT(u2.firstName, " ", u2.lastName), ro.command, ro.done, ro.repo_worker_message, ro.created, ro.processed FROM repo_operations AS ro LEFT OUTER JOIN users AS u1 ON ro.req_user_id = u1.id LEFT OUTER JOIN users AS u2 ON ro.for_user_id = u2.id' . $q_p1 . ' ORDER BY ro.id DESC')) {
             $ans = array();
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $result->fetch_array()) {
                 array_push($ans, $row);
             }
             return $ans;

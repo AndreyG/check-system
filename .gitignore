@@ -14,3 +14,9 @@
 # Vim files
 *.swp
 *.swo
+
+# Logs
+*.log
+
+# Repositories
+/repo_worker/data/

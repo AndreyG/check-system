@@ -69,16 +69,18 @@ def init():
         subprocess.call(["git", "commit", "-am", "Add @teachers group to config"])
         subprocess.call(["git", "push", "origin", "master"])
 
-def setOperationCompleted(opId, message):
+def setOperationStatus(opId, status, message):
     global cursor
+    cursor.execute("UPDATE repo_operations SET done = %d, repo_worker_message = \"%s\", processed = NOW() WHERE id = %d" % (status, message, opId))
+
+def setOperationCompleted(opId, message):
     message = "DONE: " + message
-    cursor.execute("UPDATE repo_operations SET done = 1, repo_worker_message = \"%s\" WHERE id = %d" % (message, opId))
+    setOperationStatus(opId, 1, message)
     print message
 
 def setOperationFailed(opId, message):
-    global cursor
     message = "FAILED: " + message
-    cursor.execute("UPDATE repo_operations SET done = 2, repo_worker_message = \"%s\" WHERE id = %d" % (message, opId))
+    setOperationStatus(opId, 2, message)
     print message
 
 @synchronized

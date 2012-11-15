@@ -30,11 +30,14 @@ class RepoOperationsTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
 ?>
+<p><b>Repository operations</b></p>
 <table border=1>
     <tr>
         <td><b>Requested by</b></td>
         <td><b>For</b></td>
         <td><b>Operation</b></td>
+        <td><b>Created</b></td>
+        <td><b>Processed</b></td>
         <td><b>Status</b></td>
         <td><b>Message</b></td>
     </tr>
@@ -43,9 +46,11 @@ class RepoOperationsTab extends AbstractTab {
             foreach ($ops as $op) {
 ?>
     <tr>
-        <td><?php echo $op['req_user_id']; ?></td>
-        <td><?php echo $op['for_user_id']; ?></td>
+        <td><?php echo $op[0]; ?></td>
+        <td><?php echo $op[1]; ?></td>
         <td><?php echo $op['command']; ?></td>
+        <td><?php echo $op['created']; ?></td>
+        <td><?php echo $op['processed']; ?></td>
         <td><?php $this->displayStatusText($op['done']); ?></td>
         <td><?php echo ($op['repo_worker_message'] != NULL) ? $op['repo_worker_message'] : ""; ?></td>
     </tr>

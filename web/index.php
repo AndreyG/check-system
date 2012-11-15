@@ -27,7 +27,7 @@
 
     $tabHolder = new TabHolder();
 
-    $dbm = new DatabaseManager($max_upload_file_size);
+    $dbm = new DatabaseManager($max_upload_file_size, $repo_worker_host, $repo_worker_port);
 
     if (!$dbm->connect($db_server, $db_user, $db_passwd, $db_name)) {
         $connError = $dbm->getConnError();

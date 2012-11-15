@@ -22,20 +22,6 @@ class TasksTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
 ?>
-<p><b>Connection with Git repository</b></p>
-<form method="post" action="<?php echo $this->formAction; ?>">
-    <table>
-        <tr>
-            <td>Address:</td>
-            <td><input type="text" size="40" name="groupName"></td>
-            <td>(something like <i>git@github.com:Tsar/tv_tuner_management.git</i>)</td>
-        </tr>
-        <tr>
-            <td colspan="2"><center><input type="submit" name="submitCreateGroup" value="Update git link"></center></td>
-        </tr>
-    </table>
-</form>
-<br />
 <table border=1>
     <tr>
         <td><b>Name</b></td>
