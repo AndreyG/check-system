@@ -28,17 +28,18 @@ class MakeTeacherTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
+        $i = 0;
 ?>
-<table border=1>
+<table id="infoTable">
     <tr>
-        <td><b>Name</b></td>
-        <td></td>
+        <th>Name</th>
+        <th>Action</th>
     </tr>
 <?php
         if ($students = $this->dbm->getAllStudents()) {
             foreach ($students as $student) {
 ?>
-    <tr>
+    <?php tr($i); ?>
         <td><?php echo $student['firstName'] . ' ' . $student['lastName']; ?></td>
         <td><a href="?page=make_teacher&id=<?php echo $student['id']; ?>">Make teacher</a></td>
     </tr>

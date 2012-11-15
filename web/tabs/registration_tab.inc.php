@@ -35,42 +35,43 @@ class RegistrationTab extends AbstractTab {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
         if ($this->regAvaliable) {
+            $i = 0;
 ?>
 <form method="post" action="<?php echo $this->formAction; ?>">
-    <table>
-        <tr>
+    <table id="submitTable">
+        <?php tr($i); ?>
             <td>Login:</td>
             <td><input type="text" size="20" name="login" value="<?php echo $this->userInfo->login; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>First name:</td>
             <td><input type="text" size="20" name="firstName" value="<?php echo $this->userInfo->firstName; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Last name:</td>
             <td><input type="text" size="20" name="lastName" value="<?php echo $this->userInfo->lastName; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Group:</td>
             <td><?php displayGroupsSelect($this->dbm, $this->userInfo->groupId); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>E-mail:</td>
             <td><input type="text" size="20" name="email" value="<?php echo $this->userInfo->email; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Password:</td>
             <td><input type="password" size="20" name="password"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Repeat password:</td>
             <td><input type="password" size="20" name="password2"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Public key for Git:</td>
-            <td><textarea name="publickey" cols="50" rows="10"><?php echo $this->publicKey; ?></textarea></td>
+            <td><textarea name="publickey" cols="90" rows="7"><?php echo $this->publicKey; ?></textarea></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td colspan="2"><center><input type="submit" name="submitRegister" value="Register"></center></td>
         </tr>
     </table>

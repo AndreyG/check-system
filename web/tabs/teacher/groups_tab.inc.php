@@ -25,19 +25,20 @@ class GroupsTab extends AbstractTab {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
 ?>
-<table border=1>
+<table id="infoTable">
     <tr>
-        <td><b>Group name</b></td>
-        <td><b>Students</b></td>
-        <td><b>Assigned tasks</b></td>
+        <th>Group name</th>
+        <th>Students</th>
+        <th>Assigned tasks</th>
     </tr>
 <?php
         if ($groups = $this->dbm->getAllGroups()) {
+            $i = 0;
             foreach ($groups as $group) {
                 $students = $this->dbm->getAllStudents($group['id']);
                 $strStudents = "";
                 foreach ($students as $student) {
-                    $strStudents .= '<a href="?page=edit_student&id=' . $student['id'] . '">' . $student['firstName'] . ' ' . $student['lastName'] . '</a>; ';
+                    $strStudents .= $student['firstName'] . ' ' . $student['lastName'] . '; ';
                 }
                 $tasks = $this->dbm->getAllTasksForGroup($group['id']);
                 $strTasks = "";
@@ -45,7 +46,7 @@ class GroupsTab extends AbstractTab {
                     $strTasks .= '<a href="?page=edit_task&id=' . $task['task_id'] . '">' . $task['name'] . '</a>; ';
                 }
 ?>
-    <tr>
+    <?php tr($i); ?>
         <td><?php echo $group['name'] ?></td>
         <td><font size=2><?php echo substr($strStudents, 0, -2); ?></font></td>
         <td><font size=2><?php echo substr($strTasks, 0, -2); ?></font></td>

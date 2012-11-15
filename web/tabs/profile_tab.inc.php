@@ -32,56 +32,57 @@ class ProfileTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
+        $i = 0;
 ?>
 <form method="post" action="<?php echo $this->formAction; ?>">
-    <table>
-        <tr>
+    <table id="submitTable">
+        <?php tr($i); ?>
             <td>Login:</td>
             <td><?php echo $this->userInfo->login; ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Role:</td>
             <td><?php echo ($this->userInfo->isTeacher ? "Teacher" : "Student"); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>First name:</td>
             <td><input type="text" size="20" name="firstName" value="<?php echo $this->userInfo->firstName; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Last name:</td>
             <td><input type="text" size="20" name="lastName" value="<?php echo $this->userInfo->lastName; ?>"></td>
         </tr>
 <?php
         if (!$this->userInfo->isTeacher) {
 ?>
-        <tr>
+        <?php tr($i); ?>
             <td>Group:</td>
             <td><?php displayGroupsSelect($this->dbm, $this->userInfo->groupId); ?></td>
         </tr>
 <?php
         }
 ?>
-        <tr>
+        <?php tr($i); ?>
             <td>E-mail:</td>
             <td><input type="text" size="20" name="email" value="<?php echo $this->userInfo->email; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>New password:</td>
             <td><input type="password" size="20" name="newPassword"> (leave empty if you don't need to change it)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Repeat new password:</td>
             <td><input type="password" size="20" name="newPassword2"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Current password:</td>
             <td><input type="password" size="20" name="password"> (required for updating profile)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Public key for Git:</td>
-            <td><textarea name="publickey" cols="50" rows="10"><?php echo isset($_POST['publickey']) ? $_POST['publickey'] : $this->publicKey; ?></textarea> (won't update immediately)</td>
+            <td><textarea name="publickey" cols="60" rows="9"><?php echo isset($_POST['publickey']) ? $_POST['publickey'] : $this->publicKey; ?></textarea> (won't update immediately)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td colspan="2"><center><input type="submit" name="submitUpdateProfile" value="Update profile"></center></td>
         </tr>
     </table>

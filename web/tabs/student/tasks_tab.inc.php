@@ -22,19 +22,20 @@ class TasksTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
 ?>
-<table border=1>
+<table id="infoTable">
     <tr>
-        <td><b>Name</b></td>
-        <td><b>Description</b></td>
-        <td><b>Task file</b></td>
-        <td><b>Student env file</b></td>
-        <td><b>Assignment type</b></td>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Task file</th>
+        <th>Student env file</th>
+        <th>Assignment type</th>
     </tr>
 <?php
         if ($tasks = $this->dbm->getAllTasksForStudent($this->userId)) {
+            $i = 0;
             foreach ($tasks as $task) {
 ?>
-    <tr>
+    <?php tr($i); ?>
         <td><?php echo $task[1]; ?></td>
         <td><font size=2><?php echo $task[2]; ?></font></td>
         <td><?php echo ($task[3] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[3] . "&md5=" . $task[7]  . "\" target=_blank>" . $task[5]) . "</a>" : "-"; ?></td>

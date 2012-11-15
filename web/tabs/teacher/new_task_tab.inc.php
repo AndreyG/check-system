@@ -32,32 +32,32 @@ class NewTaskTab extends AbstractTab {
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
 ?>
 <form method="post" action="<?php echo $this->formAction; ?>" enctype="multipart/form-data">
-    <table>
-        <tr>
+    <table id="submitTable">
+        <?php tr($i); ?>
             <td>Task name:</td>
             <td><input type="text" size="20" name="name" value="<?php echo $this->oldNameValue; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Description:</td>
             <td><textarea name="description" cols="50" rows="3"><?php echo $this->oldDescriptionValue; ?></textarea></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Task file:</td>
             <td><input type="file" name="taskFile" /> (optional)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Student environment file:</td>
             <td><input type="file" name="envFile" /> (optional)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Assign to groups:</td>
             <td><?php displayGroupsMultiSelect($this->dbm, $this->assArray[1]); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Assign to students:</td>
             <td><?php displayStudentsMultiSelect($this->dbm, $this->assArray[0]); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td colspan="2"><center><input type="submit" name="submitNewTask" value="Add"></center></td>
         </tr>
     </table>

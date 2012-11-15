@@ -31,28 +31,29 @@ class RepoOperationsTab extends AbstractTab {
         display_content_start_block();
 ?>
 <p><b>Repository operations</b></p>
-<table border=1>
+<table id="infoTable">
     <tr>
-        <td><b>Requested by</b></td>
-        <td><b>For</b></td>
-        <td><b>Operation</b></td>
-        <td><b>Created</b></td>
-        <td><b>Processed</b></td>
-        <td><b>Status</b></td>
-        <td><b>Message</b></td>
+        <th>Requested by</th>
+        <th>For</th>
+        <th>Operation</th>
+        <th>Created</th>
+        <th>Processed</th>
+        <th>Status</th>
+        <th>Message</th>
     </tr>
 <?php
         if ($ops = $this->dbm->getOperations($this->userId)) {
+            $i = 0;
             foreach ($ops as $op) {
 ?>
-    <tr>
-        <td><?php echo $op[0]; ?></td>
-        <td><?php echo $op[1]; ?></td>
+    <?php tr($i); ?>
+        <td><font size=2><?php echo $op[0]; ?></font></td>
+        <td><font size=2><?php echo $op[1]; ?></font></td>
         <td><?php echo $op['command']; ?></td>
-        <td><?php echo $op['created']; ?></td>
-        <td><?php echo $op['processed']; ?></td>
+        <td><font size=2><?php echo $op['created']; ?></font></td>
+        <td><font size=2><?php echo $op['processed']; ?></font></td>
         <td><?php $this->displayStatusText($op['done']); ?></td>
-        <td><?php echo ($op['repo_worker_message'] != NULL) ? $op['repo_worker_message'] : ""; ?></td>
+        <td><font size=2><?php echo ($op['repo_worker_message'] != NULL) ? $op['repo_worker_message'] : ""; ?></font></td>
     </tr>
 <?php
             }

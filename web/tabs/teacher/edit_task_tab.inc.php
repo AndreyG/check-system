@@ -43,36 +43,37 @@ class EditTaskTab extends AbstractTab {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, $this->successInfo);
         if ($this->taskDataArray) {
+            $i = 0;
 ?>
 <form method="post" action="<?php echo $this->formAction . '?' . $this->getTabInfo()->page; ?>" enctype="multipart/form-data">
-    <table>
-        <tr>
+    <table id="submitTable">
+        <?php tr($i); ?>
             <td>Task name:</td>
             <td><input type="text" size="20" name="name" value="<?php echo $this->taskDataArray[1]; ?>"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Description:</td>
             <td><textarea name="description" cols="50" rows="3"><?php echo $this->taskDataArray[2]; ?></textarea></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Task file:</td>
             <td><?php echo ($this->taskDataArray[3] != NULL) ? ("<a href=\"?page=download_file&id=" . $this->taskDataArray[3] . "&md5=" . $this->taskDataArray[7] .
                      "\" target=_blank>" . $this->taskDataArray[5]) . "</a>" : "-"; ?><br />Update with file: <input type="file" name="taskFile" /> (don't set to leave as it is)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Student environment file:</td>
             <td><?php echo ($this->taskDataArray[4] != NULL) ? ("<a href=\"?page=download_file&id=" . $this->taskDataArray[4] . "&md5=" . $this->taskDataArray[10] .
                      "\" target=_blank>" . $this->taskDataArray[8]) . "</a>" : "-"; ?><br />Update with file: <input type="file" name="envFile" /> (don't set to leave as it is)</td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Assign to groups:</td>
             <td><?php displayGroupsMultiSelect($this->dbm, $this->assArray[1]); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Assign to students:</td>
             <td><?php displayStudentsMultiSelect($this->dbm, $this->assArray[0]); ?></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td colspan="2"><center><input type="submit" name="submitEditTask" value="Edit"></center></td>
         </tr>
     </table>

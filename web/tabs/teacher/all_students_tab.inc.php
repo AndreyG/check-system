@@ -18,15 +18,15 @@ class AllStudentsTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
 ?>
-<table border=1>
+<table id="infoTable">
     <tr>
-        <td><b>Name</b></td>
-        <td><b>Group</b></td>
-        <td><b>Assigned tasks</b><br /><font size=2>g - by group, s - by student</font></td>
-        <td></td>
+        <th>Name</th>
+        <th>Group</th>
+        <th>Assigned tasks<br /><font size=2>g - by group, s - by student</font></th>
     </tr>
 <?php
         if ($students = $this->dbm->getAllStudents()) {
+            $i = 0;
             foreach ($students as $student) {
                 $tasks = $this->dbm->getAllTasksForStudent($student['id']);
                 $strTasks = "";
@@ -34,11 +34,10 @@ class AllStudentsTab extends AbstractTab {
                     $strTasks .= '<a href="?page=edit_task&id=' . $task[0] . '">' . $task[1] . '</a> ' . (($task[11] == 1) ? '(g)' : '(s)') . '; ';
                 }
 ?>
-    <tr>
+    <?php tr($i); ?>
         <td><?php echo $student['firstName'] . ' ' . $student['lastName']; ?></td>
         <td><?php echo ($student['name'] != NULL) ? $student['name'] : "<i>&lt;not set&gt;</i>"; ?></td>
         <td><font size=2><?php echo substr($strTasks, 0, -2); ?></font></td>
-        <td><a href="?page=edit_student&id=<?php echo $student['id']; ?>">Edit</a></td>
     </tr>
 <?php
             }

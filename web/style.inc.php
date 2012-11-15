@@ -133,4 +133,9 @@ function getPostArray($arrayName) {
     return empty($_POST[$arrayName]) ? array() : $_POST[$arrayName];
 }
 
+function tr(&$i) {
+    echo ($i % 2 == 0) ? '<tr class="odd">' : '<tr class="even">';
+    ++$i;
+}
+
 ?>

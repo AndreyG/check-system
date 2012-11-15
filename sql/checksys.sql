@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 14, 2012 at 04:12 PM
+-- Generation Time: Nov 15, 2012 at 03:00 PM
 -- Server version: 5.1.61-log
 -- PHP Version: 5.3.10-pl0-gentoo
 
@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS `repo_operations` (
   `param5` text,
   `done` int(11) NOT NULL DEFAULT '0',
   `repo_worker_message` text,
+  `created` datetime NOT NULL,
+  `processed` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

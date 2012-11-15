@@ -24,18 +24,19 @@ class AuthorizationTab extends AbstractTab {
     public function displayContent() {
         display_content_start_block();
         display_error_or_info_if_any($this->errorInfo, "");
+        $i = 0;
 ?>
 <form method="post" action="<?php echo $this->formAction; ?>">
-    <table>
-        <tr>
+    <table id="submitTable">
+        <?php tr($i); ?>
             <td>Login:</td>
             <td><input type="text" size="20" name="login"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td>Password:</td>
             <td><input type="password" size="20" name="password"></td>
         </tr>
-        <tr>
+        <?php tr($i); ?>
             <td colspan="2"><center><input type="submit" name="submitLogin" value="Login"></center></td>
         </tr>
     </table>
