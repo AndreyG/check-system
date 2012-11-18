@@ -50,7 +50,7 @@ class RepoTab extends AbstractTab {
             foreach ($ops as $op) {
 ?>
     <?php tr($i); ?>
-        <td><font size=2><?php echo $op[0]; ?></font></td>
+        <td><font size=2><?php echo ($op[0] != NULL) ? $op[0] : '<i>checksys</i>'; ?></font></td>
         <td><font size=2><?php echo $op[1]; ?></font></td>
         <td><?php echo $op['command']; ?></td>
         <td><font size=2><?php echo $op['created']; ?></font></td>

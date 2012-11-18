@@ -498,7 +498,7 @@ class DatabaseManager {
         
         if (!$this->query('UPDATE users SET isTeacher = 1 WHERE isTeacher = 0 AND id = ' . $userId))
             return false;
-        $this->newRepoOperation(0, $userId, 'maketeacher', array('u' . $userId));
+        $this->newRepoOperation(0, $userId, 'newteacher', array('u' . $userId));
         return true;
     }
 

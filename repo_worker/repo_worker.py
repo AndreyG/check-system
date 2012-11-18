@@ -127,7 +127,7 @@ def update():
                     setOperationFailed(id, opMsg)
             else:
                 setOperationFailed(id, opMsg)
-        
+
         elif command == "newpubkey":
             # param1 - repo name
             # param2 - public key
@@ -145,6 +145,21 @@ def update():
                         pubkey.write(param2)
                     subprocess.call(["git", "add", pubkeyFilename])
                 subprocess.call(["git", "commit", "-am", "New public key for user [%s]" % param1])
+                subprocess.call(["git", "push", "origin", "master"])
+                setOperationCompleted(id, opMsg)
+            except:
+                setOperationFailed(id, opMsg)
+
+        elif command == "newteacher":
+            # param1 - teacher's git account
+            opMsg = "add %s to @teachers" % param1
+            try:
+                with open("conf/gitolite.conf", "r") as conf:
+                    confContents = conf.read()
+                confContents = re.sub(r'(@teachers\s*=[^\n]*)', r'\1 %s' % param1, confContents)
+                with open("conf/gitolite.conf", "w") as conf:
+                    conf.write(confContents)
+                subprocess.call(["git", "commit", "-am", "Add new teacher [%s] to @teachers group" % param1])
                 subprocess.call(["git", "push", "origin", "master"])
                 setOperationCompleted(id, opMsg)
             except:
