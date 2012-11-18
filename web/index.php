@@ -118,7 +118,7 @@
 
                 $user_info = $dbm->getUserInfo($user_id);
 
-                $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info, $gitolite_admin_repo_path);
+                $profileTab = new ProfileTab($selfLink, $dbm, $user_id, $user_info);
                 $repoTab = new RepoTab($dbm, $user_info->isTeacher ? 0 : $user_id);
                 $logoutTab = new LogoutTab();
 

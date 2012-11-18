@@ -94,6 +94,8 @@ def update():
         id, command, for_user_id, param1, param2, param3, param4, param5 = row
 
         if command == "createrepo":
+            # param1 - repo name
+            # param2 - public key
             opMsg = "create repo for %s" % param1
             pubkeyFilename = "keydir/%s.pub" % param1
             if param1 != "gitolite-admin" and param1 != "testing" and (not os.path.isfile(pubkeyFilename)):
@@ -115,6 +117,8 @@ def update():
                 setOperationFailed(id, opMsg)
         
         elif command == "newpubkey":
+            # param1 - repo name
+            # param2 - public key
             opMsg = "new public key for %s" % param1
             pubkeyFilename = "keydir/%s.pub" % param1
             if os.path.isfile(pubkeyFilename):

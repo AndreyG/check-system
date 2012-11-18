@@ -13,7 +13,7 @@ class ProfileTab extends AbstractTab {
     private $userInfo;
     private $publicKey;
 
-    function __construct($formAction, DatabaseManager &$dbm, $userId, UserInfo $userInfo, $gitolite_admin_repo_path) {
+    function __construct($formAction, DatabaseManager &$dbm, $userId, UserInfo $userInfo) {
         $this->formAction = $formAction;
         $this->dbm = $dbm;
         $this->errorInfo = "";
@@ -21,8 +21,9 @@ class ProfileTab extends AbstractTab {
         $this->userId = $userId;
         //$this->userInfo = $this->dbm->getUserInfo($this->userId);
         $this->userInfo = $userInfo;
-        $pubkeyFilename = $gitolite_admin_repo_path . "/keydir/u" . $userId . ".pub";
-        $this->publicKey = file_exists($pubkeyFilename) ? file_get_contents($pubkeyFilename) : "{could not load public key, but still may be able to update it}";
+        $this->publicKey = $this->dbm->getPublicKey($userId);
+        if ($this->publicKey === false)
+            $this->publicKey = '{could not load public key, but still may be able to update it}';
     }
 
     public function getTabInfo() {

@@ -532,6 +532,20 @@ class DatabaseManager {
         }
         return "git@<host>:tasks.git";
     }
+    
+    public function getPublicKey($userId) {
+        $userId = $this->escapeStr($userId);
+        if ($result = $this->query('SELECT param2 FROM repo_operations WHERE for_user_id = ' . $userId . ' AND (command = "createrepo" OR command = "newpubkey") AND done = 1 ORDER BY processed DESC LIMIT 1')) {
+            if ($result->num_rows == 1){
+                $row = $result->fetch_assoc();
+                return $row['param2'];
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 
     public function close() {
         $this->mysqli->close();

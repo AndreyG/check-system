@@ -12,8 +12,6 @@ $db_name   = 'checksys';
 # Upload Settings
 $max_upload_file_size = 10 * 1024 * 1024;
 
-$gitolite_admin_repo_path = "../repo_worker/data/gitolite-admin";
-
 $repo_worker_host = gethostbyname("localhost");
 $repo_worker_port = 10599;
 
