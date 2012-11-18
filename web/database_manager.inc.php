@@ -496,7 +496,10 @@ class DatabaseManager {
     public function makeTeacher($userId) {
         $userId = $this->escapeStr($userId);
         
-        return $this->query('UPDATE users SET isTeacher = 1 WHERE isTeacher = 0 AND id = ' . $userId);
+        if (!$this->query('UPDATE users SET isTeacher = 1 WHERE isTeacher = 0 AND id = ' . $userId))
+            return false;
+        $this->newRepoOperation(0, $userId, 'maketeacher', array('u' . $userId));
+        return true;
     }
 
     public function getOperations($userId = 0) {

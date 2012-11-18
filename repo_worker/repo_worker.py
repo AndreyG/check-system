@@ -27,7 +27,6 @@ def repoAddress(repoName):
 id_rsa = "id_rsa"
 
 # just initializing some global variables
-db = None
 cursor = None
     
 def synchronized(func):
@@ -42,6 +41,8 @@ def configRepo():
     subprocess.call(["git", "config", "user.email", "checksys@no-real-existing-host.com"])
 
 def init():
+    global cursor
+
     subprocess.call(["ssh-add", "-D"])
     subprocess.call(["ssh-add", id_rsa])
 
@@ -60,13 +61,25 @@ def init():
 
     configRepo()
     
-    # check that '@teachers' group exists
     with open("conf/gitolite.conf", "r") as conf:
         confContents = conf.read()
+    newConfContents = confContents
+
+    # check that '@teachers' group exists
     if re.search(r'@teachers\s*=', confContents) == None:
+        cursor.execute("SELECT id FROM users WHERE isTeacher = 1 ORDER BY id")
+        result = cursor.fetchall()
+        teachersList = [("u%d" % row[0]) for row in result]
+        newConfContents = "@teachers = admin " + " ".join(teachersList) + "\n\n" + newConfContents
+    
+    # check that 'tasks' repository exists
+    if re.search(r'repo\s+tasks[^\w]', confContents) == None:
+        newConfContents += "\nrepo    tasks\n        RW+     =   @teachers\n"
+    
+    if confContents != newConfContents:
         with open("conf/gitolite.conf", "w") as conf:
-            conf.write("@teachers = admin\n\n" + confContents)
-        subprocess.call(["git", "commit", "-am", "Add @teachers group to config"])
+            conf.write(newConfContents)
+        subprocess.call(["git", "commit", "-am", "Fix config (@teachers group, tasks repo)"])
         subprocess.call(["git", "push", "origin", "master"])
 
 def setOperationStatus(opId, status, message):
@@ -85,7 +98,6 @@ def setOperationFailed(opId, message):
 
 @synchronized
 def update():
-    global db
     global cursor
     
     cursor.execute("SELECT id, command, for_user_id, param1, param2, param3, param4, param5 FROM repo_operations WHERE done = 0 ORDER BY id")
@@ -121,19 +133,21 @@ def update():
             # param2 - public key
             opMsg = "new public key for %s" % param1
             pubkeyFilename = "keydir/%s.pub" % param1
-            if os.path.isfile(pubkeyFilename):
-                try:
+            try:
+                if os.path.isfile(pubkeyFilename):
                     with open(pubkeyFilename, "r") as pubkey:
                         oldPubkey = pubkey.read()
                     if oldPubkey != param2:
                         with open(pubkeyFilename, "w") as pubkey:
                             pubkey.write(param2)
-                        subprocess.call(["git", "commit", "-am", "New public key for user [%s]" % param1])
-                        subprocess.call(["git", "push", "origin", "master"])
-                    setOperationCompleted(id, opMsg)
-                except:
-                    setOperationFailed(id, opMsg)
-            else:
+                else:
+                    with open(pubkeyFilename, "w") as pubkey:
+                        pubkey.write(param2)
+                    subprocess.call(["git", "add", pubkeyFilename])
+                subprocess.call(["git", "commit", "-am", "New public key for user [%s]" % param1])
+                subprocess.call(["git", "push", "origin", "master"])
+                setOperationCompleted(id, opMsg)
+            except:
                 setOperationFailed(id, opMsg)
 
         else:
