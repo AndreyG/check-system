@@ -36,7 +36,17 @@ def synchronized(func):
             return func(*args, **kws)
     return synced_func
 
-def configRepo():
+# current directory should be WORK_DIR
+def cloneOrPullRepo(repoName, branch = "master"):
+    if not os.path.isdir(repoName):
+        subprocess.call(["git", "clone", repoAddress(repoName)])
+        os.chdir(repoName)
+    else:
+        os.chdir(repoName)
+        subprocess.call(["git", "reset", "--hard"])  # we don't need any local changes
+        subprocess.call(["git", "fetch"])
+        subprocess.call(["git", "pull", "-r", "origin", branch])
+
     subprocess.call(["git", "config", "user.name", "Check System"])
     subprocess.call(["git", "config", "user.email", "checksys@no-real-existing-host.com"])
 
@@ -48,19 +58,10 @@ def init():
 
     if not os.path.isdir(WORK_DIR):
         os.makedirs(WORK_DIR)
+    os.chdir(WORK_DIR)
 
-    if not os.path.isdir(WORK_DIR + "/" + GITOLITE_ADMIN_REPONAME):
-        os.chdir(WORK_DIR)
-        subprocess.call(["git", "clone", repoAddress(GITOLITE_ADMIN_REPONAME)])
-        os.chdir(GITOLITE_ADMIN_REPONAME)
-    else:
-        os.chdir(WORK_DIR + "/" + GITOLITE_ADMIN_REPONAME)
-        subprocess.call(["git", "reset", "--hard"])  # we don't need any local changes
-        subprocess.call(["git", "fetch"])
-        subprocess.call(["git", "pull", "-r", "origin", "master"])
+    cloneOrPullRepo(GITOLITE_ADMIN_REPONAME)
 
-    configRepo()
-    
     with open("conf/gitolite.conf", "r") as conf:
         confContents = conf.read()
     newConfContents = confContents
@@ -96,6 +97,9 @@ def setOperationFailed(opId, message):
     setOperationStatus(opId, 2, message)
     print message
 
+def exceptionInfo():
+     return ' [error: %s]' % sys.exc_info()[1]
+
 @synchronized
 def update():
     global cursor
@@ -110,7 +114,7 @@ def update():
             # param2 - public key
             opMsg = "create repo for %s" % param1
             pubkeyFilename = "keydir/%s.pub" % param1
-            if param1 != "gitolite-admin" and param1 != "testing" and (not os.path.isfile(pubkeyFilename)):
+            if param1 != "gitolite-admin" and param1 != "testing" and param1 != "tasks" and (not os.path.isfile(pubkeyFilename)):
                 try:
                     with open("conf/gitolite.conf", "r") as conf:
                         confContents = conf.read()
@@ -124,9 +128,9 @@ def update():
                     cursor.execute("UPDATE users SET git = \"%s\" WHERE id = %d" % (repoAddress(param1), for_user_id))
                     setOperationCompleted(id, opMsg)
                 except:
-                    setOperationFailed(id, opMsg)
+                    setOperationFailed(id, opMsg + exceptionInfo())
             else:
-                setOperationFailed(id, opMsg)
+                setOperationFailed(id, opMsg + ' [invalid repository name]')
 
         elif command == "newpubkey":
             # param1 - repo name
@@ -148,7 +152,7 @@ def update():
                 subprocess.call(["git", "push", "origin", "master"])
                 setOperationCompleted(id, opMsg)
             except:
-                setOperationFailed(id, opMsg)
+                setOperationFailed(id, opMsg + exceptionInfo())
 
         elif command == "newteacher":
             # param1 - teacher's git account
@@ -163,7 +167,19 @@ def update():
                 subprocess.call(["git", "push", "origin", "master"])
                 setOperationCompleted(id, opMsg)
             except:
-                setOperationFailed(id, opMsg)
+                setOperationFailed(id, opMsg + exceptionInfo())
+
+        elif command == "updatetasks":
+            # no params
+            opMsg = "update tasks"
+            os.chdir('../')
+            try:
+                cloneOrPullRepo('tasks')
+                # TODO: something with os.listdir('.')
+                setOperationCompleted(id, opMsg)
+            except:
+                setOperationFailed(id, opMsg + exceptionInfo())
+            os.chdir('../' + GITOLITE_ADMIN_REPONAME)
 
         else:
             setOperationFailed(id, "unknown operation")
