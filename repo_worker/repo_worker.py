@@ -8,7 +8,7 @@ import subprocess
 import threading
 
 # database connection information
-DB_HOST   = '178.162.101.7'
+DB_HOST   = 'localhost'
 DB_USER   = 'checksys'
 DB_PASSWD = 'eEG5XcsRV3CVtANQ'
 DB_NAME   = 'checksys'

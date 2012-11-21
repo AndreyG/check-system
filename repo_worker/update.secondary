@@ -10,7 +10,7 @@ if len(sys.argv) < 2:
     exit(1)
 
 # database connection information
-DB_HOST   = '178.162.101.7'
+DB_HOST   = 'localhost'
 DB_USER   = 'checksys'
 DB_PASSWD = 'eEG5XcsRV3CVtANQ'
 DB_NAME   = 'checksys'
@@ -23,28 +23,53 @@ LOG_FILENAME = os.environ['HOME'] + '/checksys_push_hook.log'
 def getDatetimeString():
     return "%d-%02d-%02d %02d:%02d:%02d: " % (datetime.datetime.now().year, datetime.datetime.now().month, datetime.datetime.now().day, datetime.datetime.now().hour, datetime.datetime.now().minute, datetime.datetime.now().second)
 
+def writeToLog(msg):
+    with open(LOG_FILENAME, 'a') as log:
+        log.write(getDatetimeString() + msg + '\n')
+
+def newRepoOperation(reqUserId, forUserId, operation, param1 = None):
+    db = MySQLdb.connect(host = DB_HOST, user = DB_USER, passwd = DB_PASSWD, db = DB_NAME)
+    cursor = db.cursor()
+    q_p1 = ''
+    q_p2 = ''
+    if param1 != None:
+        q_p1 = ', param1'
+        q_p2 = ', "%s"' % param1
+    q = 'INSERT INTO repo_operations (req_user_id, for_user_id, command%s, created) VALUES (%d, %d, "%s"%s, NOW())' % (q_p1, reqUserId, forUserId, operation, q_p2)
+    cursor.execute(q)
+    writeToLog("Executed SQL: %s" % q)
+    db.close()
+
+def sendNotificationToRepoWorker():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((REPO_WORKER_HOST, REPO_WORKER_PORT))
+    sock.send("update")
+    sock.close()
+
 repo = os.environ['GL_REPO']
-if re.match(r'u\d+', repo) != None and sys.argv[1] == "refs/heads/submit":
+
+if repo == "tasks" and sys.argv[1] == "refs/heads/master":
+    try:
+        teacherId = int(os.environ['GL_USER'][1:])
+        newRepoOperation(teacherId, 0, "updatetasks")
+    except:
+        writeToLog('ERROR: Could not write to database that tasks repository was updated [error: %s]' % sys.exc_info()[1])
+        exit(1)
+    try:
+        sendNotificationToRepoWorker()
+        writeToLog('Push to branch "master" in repository tasks; repo_worker notified')
+    except:
+        writeToLog('Push to branch "master" in repository tasks; repo_worker NOT notified [error: %s]' % sys.exc_info()[1])
+
+elif re.match(r'u\d+', repo) != None and sys.argv[1] == "refs/heads/submit":
     try:
         userId = int(repo[1:])
-
-        db = MySQLdb.connect(host = DB_HOST, user = DB_USER, passwd = DB_PASSWD, db = DB_NAME)
-        cursor = db.cursor()
-        cursor.execute('INSERT INTO repo_operations (req_user_id, for_user_id, command, param1, created) VALUES (%d, %d, "submit", "%s", NOW())' % (userId, userId, repo))
-        db.close()
+        newRepoOperation(userId, userId, "submit", repo)
     except:
-        with open(LOG_FILENAME, 'a') as log:
-            log.write(getDatetimeString() + 'ERROR: Could not write to database that push to branch "submit" in repository %s happened [error: %s]\n' % (repo, sys.exc_info()[1]))
+        writeToLog('ERROR: Could not write to database that push to branch "submit" in repository %s happened [error: %s]' % (repo, sys.exc_info()[1]))
         exit(1)
-
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((REPO_WORKER_HOST, REPO_WORKER_PORT))
-        sock.send("update")
-        sock.close()
-
-        with open(LOG_FILENAME, 'a') as log:
-            log.write(getDatetimeString() + 'Push to branch "submit" in repository %s; repo_worker notified\n' % repo)
+        sendNotificationToRepoWorker()
+        writeToLog('Push to branch "submit" in repository %s; repo_worker notified' % repo)
     except:
-        with open(LOG_FILENAME, 'a') as log:
-            log.write(getDatetimeString() + 'Push to branch "submit" in repository %s; repo_worker NOT notified [error: %s]\n' % (repo, sys.exc_info()[1]))
+        writeToLog('Push to branch "submit" in repository %s; repo_worker NOT notified [error: %s]' % (repo, sys.exc_info()[1]))
