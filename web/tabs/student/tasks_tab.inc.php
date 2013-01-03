@@ -26,8 +26,6 @@ class TasksTab extends AbstractTab {
     <tr>
         <th>Name</th>
         <th>Description</th>
-        <th>Task file</th>
-        <th>Student env file</th>
         <th>Assignment type</th>
     </tr>
 <?php
@@ -38,9 +36,7 @@ class TasksTab extends AbstractTab {
     <?php tr($i); ?>
         <td><?php echo $task[1]; ?></td>
         <td><font size=2><?php echo $task[2]; ?></font></td>
-        <td><?php echo ($task[3] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[3] . "&md5=" . $task[7]  . "\" target=_blank>" . $task[5]) . "</a>" : "-"; ?></td>
-        <td><?php echo ($task[4] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[4] . "&md5=" . $task[10] . "\" target=_blank>" . $task[8]) . "</a>" : "-"; ?></td>
-        <td><?php echo ($task[11] == 1) ? "group" : "personal"; ?></td>
+        <td><?php echo ($task[3] == 1) ? "group" : "personal"; ?></td>
     </tr>
 <?php
             }

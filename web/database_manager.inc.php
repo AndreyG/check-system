@@ -24,25 +24,6 @@ class UserCheckResult {
     const MIN_VALID_USER_ID  = 1;
 }
 
-class SaveFileResult {
-    const ERR_NO_FILE       = -3;
-    const ERR_DB_ERROR      = -2;
-    const ERR_FILE_TOO_BIG  = -1;
-    const ERR_UPLOAD_ERROR  = 0;
-    // positive result is file id in database
-    const MIN_VALID_FILE_ID = 1;
-}
-
-class FileStruct {
-    public $name;
-    public $contents;
-    
-    function __construct($name, $contents) {
-        $this->name = $name;
-        $this->contents = $contents;
-    }
-}
-
 class UserInfo {
     public $login;
     public $firstName;
@@ -66,8 +47,6 @@ class UserInfo {
 }
 
 class DatabaseManager {
-    public $maxUploadFileSize;
-
     private $mysqli;
     private $connError;
     
@@ -77,8 +56,7 @@ class DatabaseManager {
     private $repo_worker_host;
     private $repo_worker_port;
 
-    function __construct($maxUploadFileSize, $repo_worker_host, $repo_worker_port) {
-        $this->maxUploadFileSize = $maxUploadFileSize;
+    function __construct($repo_worker_host, $repo_worker_port) {
         $this->repo_worker_host = $repo_worker_host;
         $this->repo_worker_port = $repo_worker_port;
     }
@@ -271,30 +249,6 @@ class DatabaseManager {
         return ($this->query('UPDATE users SET lastIP = "' . $ip . '" WHERE id = ' . $id));
     }
     
-    // returns SaveFileResult
-    public function saveFile($fileInfo) {
-        if ($fileInfo['size'] > $this->maxUploadFileSize)
-            return SaveFileResult::ERR_FILE_TOO_BIG;
-        if ($fileInfo['error'] == UPLOAD_ERR_NO_FILE)
-            return SaveFileResult::ERR_NO_FILE;
-        if ($fileInfo['error'] != UPLOAD_ERR_OK)
-            return SaveFileResult::ERR_UPLOAD_ERROR;
-        if (!is_uploaded_file($fileInfo['tmp_name']))
-            return SaveFileResult::ERR_UPLOAD_ERROR;
-
-        $fileName = $this->escapeStr(basename($fileInfo['name']));
-        $fileSize = $this->escapeStr($fileInfo['size']);
-        $fileData = $this->escapeStr(file_get_contents($fileInfo['tmp_name']));
-        $fileDataMD5 = md5($fileData);
-        
-        //insert to database
-        if ($this->query('INSERT INTO files (name, size, data, data_md5) VALUES ("' . $fileName . '", ' . $fileSize . ', "' . $fileData . '", "' . $fileDataMD5 . '")')) {
-            return $this->mysqli->insert_id;
-        } else {
-            return SaveFileResult::ERR_DB_ERROR;
-        }
-    }
-    
     private function updateTaskGroups($taskId, $groupIds) {
         $this->query('DELETE FROM group_tasks WHERE task_id = ' . $taskId);
         foreach ($groupIds as $groupId) {
@@ -311,51 +265,11 @@ class DatabaseManager {
         }
     }
 
-    // returns true or false
-    public function addNewTask($name, $description, $taskFileId, $envFileId, $groupIds, $studentIds) {
-        $name        = $this->escapeStr($name);
-        $description = $this->escapeStr($description);
-
-        $q_p1 = "";
-        $q_p2 = "";
-        $q_p3 = "";
-        $q_p4 = "";
-
-        if ($taskFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
-            $q_p1 = ', task_file_id';
-            $q_p3 = ', ' . $this->escapeStr($taskFileId);
-        }
-        if ($envFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
-            $q_p2 = ', env_file_id';
-            $q_p4 = ', ' . $this->escapeStr($envFileId);
-        }
-
-        if (!$this->query('INSERT INTO tasks (name, description' . $q_p1 . $q_p2 . ') VALUES ("' . $name . '", "' . $description . '"' . $q_p3 . $q_p4 . ')'))
-            return false;
-        $taskId = $this->mysqli->insert_id;
-
-        $this->updateTaskGroups($taskId, $groupIds);
-        $this->updateTaskStudents($taskId, $studentIds);
-
-        return true;
-    }
-
-    public function updateTask($id, $name, $description, $taskFileId, $envFileId, $groupIds, $studentIds) {
+    public function updateTask($id, $description, $groupIds, $studentIds) {
         $id          = $this->escapeStr($id);
-        $name        = $this->escapeStr($name);
         $description = $this->escapeStr($description);
 
-        $q_p1 = "";
-        $q_p2 = "";
-
-        if ($taskFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
-            $q_p1 = ', task_file_id = ' . $this->escapeStr($taskFileId);
-        }
-        if ($envFileId >= SaveFileResult::MIN_VALID_FILE_ID) {
-            $q_p2 = ', env_file_id = '. $this->escapeStr($envFileId);
-        }
-
-        if (!$this->query('UPDATE tasks SET name = "' . $name . '", description = "' . $description . '"' . $q_p1 . $q_p2 . ' WHERE id = ' . $id))
+        if (!$this->query('UPDATE tasks SET description = "' . $description . '" WHERE id = ' . $id))
             return false;
 
         $this->updateTaskGroups($id, $groupIds);
@@ -365,9 +279,9 @@ class DatabaseManager {
     }
 
     public function getAllTasks() {
-        if ($result = $this->query('SELECT tasks.*, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5 FROM tasks LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id ORDER BY tasks.id')) {
+        if ($result = $this->query('SELECT * FROM tasks ORDER BY id')) {
             $ans = array();
-            while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            while ($row = $result->fetch_assoc()) {
                 array_push($ans, $row);
             }
             return $ans;
@@ -379,30 +293,13 @@ class DatabaseManager {
     public function getTask($taskId) {
         $taskId = $this->escapeStr($taskId);
 
-        if ($result = $this->query('SELECT tasks.*, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5 FROM tasks LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE tasks.id = ' . $taskId)) {
-            return (($result->num_rows == 1) ? $result->fetch_array(MYSQLI_NUM) : false);
+        if ($result = $this->query('SELECT * FROM tasks WHERE id = ' . $taskId)) {
+            return (($result->num_rows == 1) ? $result->fetch_assoc() : false);
         } else {
             return false;
         }
     }
 
-    // returns FileStruct or false
-    public function getFile($id, $md5) {
-        $id = $this->escapeStr($id);
-        $md5 = $this->escapeStr($md5);
-        
-        if ($result = $this->query('SELECT name, data FROM files WHERE id = ' . $id . ' AND data_md5 = "' . $md5 . '"')) {
-            if ($result->num_rows == 1) {
-                $row = $result->fetch_assoc();
-                return new FileStruct($row['name'], $row['data']);
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    
     public function getAllStudents($groupId = -1) {
         $groupCond = "";
         if ($groupId !== -1) {
@@ -437,8 +334,8 @@ class DatabaseManager {
     public function getAllTasksForStudent($studentId) {
         $studentId = $this->escapeStr($studentId);
 
-        if ($result = $this->query('SELECT st.task_id, tasks.name, tasks.description, tasks.task_file_id, tasks.env_file_id, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5, 0 FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE st.student_id = ' . $studentId .
-                            ' UNION SELECT gt.task_id, tasks.name, tasks.description, tasks.task_file_id, tasks.env_file_id, tf.name, tf.size, tf.data_md5, ef.name, ef.size, ef.data_md5, 1 FROM users INNER JOIN group_tasks AS gt ON users.groupId = gt.group_id INNER JOIN tasks ON tasks.id = gt.task_id LEFT OUTER JOIN files AS tf ON tf.id = tasks.task_file_id LEFT OUTER JOIN files AS ef ON ef.id = tasks.env_file_id WHERE users.id = ' . $studentId .
+        if ($result = $this->query('SELECT st.task_id, tasks.name, tasks.description, 0 FROM student_tasks AS st INNER JOIN tasks ON tasks.id = st.task_id WHERE st.student_id = ' . $studentId .
+                            ' UNION SELECT gt.task_id, tasks.name, tasks.description, 1 FROM users INNER JOIN group_tasks AS gt ON users.groupId = gt.group_id INNER JOIN tasks ON tasks.id = gt.task_id WHERE users.id = ' . $studentId .
                             ' ORDER BY 1')) {
             $ans = array();
             while ($row = $result->fetch_array(MYSQLI_NUM)) {

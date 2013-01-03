@@ -31,7 +31,7 @@ class AllStudentsTab extends AbstractTab {
                 $tasks = $this->dbm->getAllTasksForStudent($student['id']);
                 $strTasks = "";
                 foreach ($tasks as $task) {
-                    $strTasks .= '<a href="?page=edit_task&id=' . $task[0] . '">' . $task[1] . '</a> ' . (($task[11] == 1) ? '(g)' : '(s)') . '; ';
+                    $strTasks .= '<a href="?page=edit_task&id=' . $task[0] . '">' . $task[1] . '</a> ' . (($task[3] == 1) ? '(g)' : '(s)') . '; ';
                 }
 ?>
     <?php tr($i); ?>

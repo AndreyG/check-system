@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.5.1
+-- version 3.5.4
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 15, 2012 at 03:00 PM
--- Server version: 5.1.61-log
--- PHP Version: 5.3.10-pl0-gentoo
+-- Generation Time: Jan 03, 2013 at 12:51 PM
+-- Server version: 5.5.28-0ubuntu0.12.04.3
+-- PHP Version: 5.3.10-1ubuntu3.4
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -19,21 +19,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `checksys`
 --
-
--- --------------------------------------------------------
-
---
--- Table structure for table `files`
---
-
-CREATE TABLE IF NOT EXISTS `files` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
-  `size` int(32) NOT NULL,
-  `data` longblob NOT NULL,
-  `data_md5` varchar(32) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -108,9 +93,8 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(256) NOT NULL,
   `description` text NOT NULL,
-  `task_file_id` int(11) DEFAULT NULL,
-  `env_file_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

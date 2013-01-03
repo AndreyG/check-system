@@ -9,7 +9,6 @@
 
     require_once('tabs/student/tasks_tab.inc.php');
 
-    require_once('tabs/teacher/new_task_tab.inc.php');
     require_once('tabs/teacher/all_tasks_tab.inc.php');
     require_once('tabs/teacher/all_students_tab.inc.php');
     require_once('tabs/teacher/groups_tab.inc.php');
@@ -26,7 +25,7 @@
 
     $tabHolder = new TabHolder();
 
-    $dbm = new DatabaseManager($max_upload_file_size, $repo_worker_host, $repo_worker_port);
+    $dbm = new DatabaseManager($repo_worker_host, $repo_worker_port);
 
     if (!$dbm->connect($db_server, $db_user, $db_passwd, $db_name)) {
         $connError = $dbm->getConnError();
@@ -98,18 +97,7 @@
         } else if ($user_id >= UserCheckResult::MIN_VALID_USER_ID) {
             $dbm->updateUserLastIP($user_id, getClientIP());
 
-            if ($page === "download_file" && isset($_GET['id']) && isset($_GET['md5'])) {
-                if ($fileStruct = $dbm->getFile($_GET['id'], $_GET['md5'])) {
-                    $finfo = new finfo(FILEINFO_MIME_TYPE);
-                    header('Content-type: ' . $finfo->buffer($fileStruct->contents));
-                    header('Content-Disposition: attachment; filename="' . $fileStruct->name . '"');
-                    echo $fileStruct->contents;
-                } else {
-                    echo "No such file in database (or database query error might have happened)";
-                }
-                $showPage = false;  // don't show html page
-
-            } else if ($page === "logout") {
+            if ($page === "logout") {
                 $_SESSION['user'] = "";
                 $_SESSION['md5'] = "";
                 $user_id = UserCheckResult::USER_NOT_LOGGED_IN;
@@ -132,13 +120,11 @@
                 if ($user_info->isTeacher) {
                     $allTasksTab = new AllTasksTab($dbm);
                     $allStudentsTab = new AllStudentsTab($dbm);
-                    $newTaskTab = new NewTaskTab($selfLink, $dbm);
                     $groupsTab = new GroupsTab($selfLink, $dbm);
                     
                     $tabHolder->addTab($allTasksTab);
                     $tabHolder->addTab($allStudentsTab);
                     $tabHolder->addTab($groupsTab);
-                    $tabHolder->addTab($newTaskTab);
                     $tabHolder->addTab($profileTab);
                     $tabHolder->addTab($repoTab);
 
@@ -149,12 +135,6 @@
 
                         if ($editTaskTab->isSubmitted())
                             $editTaskTab->handleSubmit();
-                    }
-
-                    // if new task form submitted
-                    if ($newTaskTab->isSubmitted()) {
-                        $page = $newTaskTab->getTabInfo()->page;
-                        $newTaskTab->handleSubmit();
                     }
 
                     // if new group form submitted

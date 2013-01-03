@@ -172,10 +172,14 @@ def update():
         elif command == "updatetasks":
             # no params
             opMsg = "update tasks"
-            os.chdir('../')
             try:
+                os.chdir('../')
                 cloneOrPullRepo('tasks')
-                # TODO: something with os.listdir('.')
+                l = os.listdir('.')
+                tl = []
+                for pth in l:
+                    if os.path.isdir(pth + '/problem') and os.path.isdir(pth + '/solution') and os.path.isdir(pth + '/tests'):
+                        cursor.execute("INSERT IGNORE INTO tasks (name) VALUES (\"%s\")" % pth)
                 setOperationCompleted(id, opMsg)
             except:
                 setOperationFailed(id, opMsg + exceptionInfo())

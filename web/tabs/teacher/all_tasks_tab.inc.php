@@ -22,8 +22,6 @@ class AllTasksTab extends AbstractTab {
     <tr>
         <th>Name</th>
         <th>Description</th>
-        <th>Task file</th>
-        <th>Student env file</th>
         <th>Assigned to<br /><font size=2>G - groups, S - students</font></th>
         <th></th>
     </tr>
@@ -31,7 +29,7 @@ class AllTasksTab extends AbstractTab {
         if ($tasks = $this->dbm->getAllTasks()) {
             $i = 0;
             foreach ($tasks as $task) {
-                $ass = $this->dbm->getAllAssignmentsForTask($task[0]);
+                $ass = $this->dbm->getAllAssignmentsForTask($task['id']);
                 $strAss = '';
                 $lastType = -1;
                 foreach ($ass as $as) {
@@ -45,12 +43,10 @@ class AllTasksTab extends AbstractTab {
                 }
 ?>
     <?php tr($i); ?>
-        <td><?php echo $task[1]; ?></td>
-        <td><font size=2><?php echo $task[2]; ?></font></td>
-        <td><?php echo ($task[3] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[3] . "&md5=" . $task[7]  . "\" target=_blank>" . $task[5]) . "</a>" : "-"; ?></td>
-        <td><?php echo ($task[4] != NULL) ? ("<a href=\"?page=download_file&id=" . $task[4] . "&md5=" . $task[10] . "\" target=_blank>" . $task[8]) . "</a>" : "-"; ?></td>
+        <td><?php echo $task['name']; ?></td>
+        <td><font size=2><?php echo $task['description']; ?></font></td>
         <td><font size=2><?php echo substr($strAss, 0, -2); ?></font></td>
-        <td><a href="?page=edit_task&id=<?php echo $task[0]; ?>">Edit</a></td>
+        <td><a href="?page=edit_task&id=<?php echo $task['id']; ?>">Edit</a></td>
     </tr>
 <?php
             }
